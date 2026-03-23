@@ -1,0 +1,58 @@
+name: CI — Build & Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test-macos:
+    name: macOS (Apple Clang, C++23)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Ninja
+        run: brew install ninja
+
+      - name: Configure (Release)
+        run: |
+          cmake -B build/release \
+                -G Ninja \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_CXX_STANDARD=23
+
+      - name: Build
+        run: cmake --build build/release --parallel
+
+      - name: Test
+        working-directory: build/release
+        run: ctest --output-on-failure --parallel 4
+
+  build-test-asan:
+    name: macOS (ASan + UBSan, C++23)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Ninja
+        run: brew install ninja
+
+      - name: Configure (Debug + Sanitizers)
+        run: |
+          cmake -B build/debug \
+                -G Ninja \
+                -DCMAKE_BUILD_TYPE=Debug \
+                -DCMAKE_CXX_STANDARD=23
+
+      - name: Build
+        run: cmake --build build/debug --parallel
+
+      - name: Test (sanitized)
+        working-directory: build/debug
+        run: ctest --output-on-failure --parallel 4

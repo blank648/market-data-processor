@@ -1,0 +1,26 @@
+# Build artifacts
+build/
+cmake-build-*/
+out/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Compile commands (generat automat)
+compile_commands.json
+
+# macOS
+.DS_Store
+*.dSYM/
+
+# Binary outputs
+*.o
+*.a
+*.dylib
+
+# Test & benchmark binaries
+unit_tests
+benchmarks
+
