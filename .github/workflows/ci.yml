@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-test-macos:
-    name: macOS (Apple Clang, C++23)
+    name: macOS (Apple Clang, C++20)
     runs-on: macos-latest
 
     steps:
@@ -23,7 +23,7 @@ jobs:
           cmake -B build/release \
                 -G Ninja \
                 -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_CXX_STANDARD=23 \
+                -DCMAKE_CXX_STANDARD=20 \
                 -DENABLE_SANITIZERS=OFF
 
       - name: Build
@@ -34,7 +34,7 @@ jobs:
         run: ctest --output-on-failure --parallel 4
 
   build-test-asan:
-    name: macOS (ASan + UBSan, C++23)
+    name: macOS (ASan + UBSan, C++20)
     runs-on: macos-latest
 
     steps:
@@ -49,7 +49,7 @@ jobs:
           cmake -B build/debug \
                 -G Ninja \
                 -DCMAKE_BUILD_TYPE=Debug \
-                -DCMAKE_CXX_STANDARD=23 \
+                -DCMAKE_CXX_STANDARD=20 \
                 -DENABLE_SANITIZERS=ON
 
       - name: Build
