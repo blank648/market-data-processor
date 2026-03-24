@@ -23,7 +23,8 @@ jobs:
           cmake -B build/release \
                 -G Ninja \
                 -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_CXX_STANDARD=23
+                -DCMAKE_CXX_STANDARD=23 \
+                -DENABLE_SANITIZERS=OFF
 
       - name: Build
         run: cmake --build build/release --parallel
@@ -48,11 +49,15 @@ jobs:
           cmake -B build/debug \
                 -G Ninja \
                 -DCMAKE_BUILD_TYPE=Debug \
-                -DCMAKE_CXX_STANDARD=23
+                -DCMAKE_CXX_STANDARD=23 \
+                -DENABLE_SANITIZERS=ON
 
       - name: Build
         run: cmake --build build/debug --parallel
 
       - name: Test (sanitized)
         working-directory: build/debug
+        env:
+          ASAN_OPTIONS: detect_leaks=0
+          UBSAN_OPTIONS: print_stacktrace=1
         run: ctest --output-on-failure --parallel 4

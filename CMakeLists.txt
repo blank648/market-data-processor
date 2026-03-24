@@ -19,6 +19,14 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
+set(DEFAULT_ENABLE_SANITIZERS OFF)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(DEFAULT_ENABLE_SANITIZERS ON)
+endif()
+option(ENABLE_SANITIZERS "Enable Address/Undefined sanitizers" ${DEFAULT_ENABLE_SANITIZERS})
+
+include(cmake/FetchDependencies.cmake)
+
 # ── Compile flags — UN FLAG PER GENERATOR EXPRESSION ─────────────────────────
 add_compile_options(
     -Wall
@@ -28,15 +36,23 @@ add_compile_options(
     $<$<CONFIG:Release>:-O3>
     $<$<CONFIG:Release>:-march=native>
     $<$<CONFIG:Debug>:-g>
-    $<$<CONFIG:Debug>:-fsanitize=address>
-    $<$<CONFIG:Debug>:-fsanitize=undefined>
-)
-add_link_options(
-    $<$<CONFIG:Debug>:-fsanitize=address>
-    $<$<CONFIG:Debug>:-fsanitize=undefined>
 )
 
-include(cmake/FetchDependencies.cmake)
+if(ENABLE_SANITIZERS)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|GNU")
+        add_compile_options(
+            $<$<CONFIG:Debug>:-fno-omit-frame-pointer>
+            $<$<CONFIG:Debug>:-fsanitize=address>
+            $<$<CONFIG:Debug>:-fsanitize=undefined>
+        )
+        add_link_options(
+            $<$<CONFIG:Debug>:-fsanitize=address>
+            $<$<CONFIG:Debug>:-fsanitize=undefined>
+        )
+    else()
+        message(WARNING "ENABLE_SANITIZERS is ON, but compiler '${CMAKE_CXX_COMPILER_ID}' is unsupported.")
+    endif()
+endif()
 
 add_subdirectory(src/core)
 add_subdirectory(src/feed)
