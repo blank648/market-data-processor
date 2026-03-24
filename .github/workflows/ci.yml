@@ -24,7 +24,8 @@ jobs:
                 -G Ninja \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_CXX_STANDARD=20 \
-                -DENABLE_SANITIZERS=OFF
+                -DENABLE_SANITIZERS=OFF \
+                -DBUILD_BENCHMARKS=OFF
 
       - name: Build
         run: cmake --build build/release --parallel
@@ -50,7 +51,8 @@ jobs:
                 -G Ninja \
                 -DCMAKE_BUILD_TYPE=Debug \
                 -DCMAKE_CXX_STANDARD=20 \
-                -DENABLE_SANITIZERS=ON
+                -DENABLE_SANITIZERS=ON \
+                -DBUILD_BENCHMARKS=OFF
 
       - name: Build
         run: cmake --build build/debug --parallel

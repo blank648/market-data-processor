@@ -24,6 +24,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(DEFAULT_ENABLE_SANITIZERS ON)
 endif()
 option(ENABLE_SANITIZERS "Enable Address/Undefined sanitizers" ${DEFAULT_ENABLE_SANITIZERS})
+option(BUILD_BENCHMARKS "Build benchmark targets" ON)
 
 include(cmake/FetchDependencies.cmake)
 
@@ -63,4 +64,8 @@ add_subdirectory(src/infra)
 
 enable_testing()
 add_subdirectory(tests)
-add_subdirectory(benchmarks)
+if(BUILD_BENCHMARKS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/CMakeLists.txt")
+    add_subdirectory(benchmarks)
+else()
+    message(STATUS "Benchmarks disabled or directory missing; skipping benchmarks target.")
+endif()
