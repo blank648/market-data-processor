@@ -4,6 +4,7 @@
 #pragma once
 
 #include <atomic>
+#include <cassert>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -16,7 +17,10 @@ public:
     explicit StopToken(const std::atomic<bool>* flag) noexcept : flag_(flag) {}
 
     [[nodiscard]] bool stop_requested() const noexcept {
-        return flag_ ? flag_->load(std::memory_order_relaxed) : false;
+        // [ARM MEMORY MODEL] acquire: pairs with the release store in stop()
+        // to guarantee the stop signal is visible on weakly-ordered CPUs
+        // (e.g., Apple Silicon M-series) without delay.
+        return flag_ ? flag_->load(std::memory_order_acquire) : false;
     }
 
 private:
@@ -34,11 +38,22 @@ private:
 /// - `start()` and `stop()` must be called from the **same** external thread.
 /// - `is_running()` is safe to query from any thread.
 ///
+/// @note SUBCLASS CONTRACT: Every concrete subclass MUST declare:
+///   @code
+///     ~SubclassName() override { stop(); }
+///   @endcode
+///   This ensures `stop()` is called — and the worker thread is joined —
+///   **before** any subclass members are destroyed. `~ThreadBase()` does NOT
+///   call `stop()`; it asserts the thread is already stopped. Violating this
+///   contract causes a use-after-free when `run()` accesses destroyed members
+///   during the join window.
+///
 /// @par Example
 /// @code
 ///     class TickPrinter : public mdp::ThreadBase {
 ///     public:
 ///         explicit TickPrinter() : mdp::ThreadBase("TickPrinter") {}
+///         ~TickPrinter() override { stop(); }  // REQUIRED — see SUBCLASS CONTRACT
 ///     protected:
 ///         void run(mdp::StopToken st) override {
 ///             while (!st.stop_requested()) {
@@ -63,8 +78,20 @@ public:
     /// @param name Descriptive label used in logs and diagnostics.
     explicit ThreadBase(std::string name) : name_(std::move(name)) {}
 
-    /// @brief Destructor — calls `stop()` to ensure the thread is joined.
-    virtual ~ThreadBase() { stop(); }
+    /// @brief Destructor — asserts the worker thread has already been stopped.
+    ///
+    /// Does NOT call `stop()`. Subclasses must call `stop()` in their own
+    /// destructor (before subclass members are destroyed) to satisfy the
+    /// SUBCLASS CONTRACT documented on the class. A failing assert in a
+    /// Debug build means a subclass forgot to call `stop()`.
+    virtual ~ThreadBase() {
+        // [FIX 1 — Destructor Chain Use-After-Free]
+        // Calling stop() here would join the thread AFTER subclass members
+        // have already been destroyed, causing use-after-free if run() is
+        // still executing. The subclass must call stop() first.
+        // DIAGNOSTIC: if this fires, a subclass forgot ~SubClass() override { stop(); }
+        assert(!thread_.joinable());  // NOLINT(misc-include-cleaner)
+    }
 
     // ─── Non-copyable, non-movable ────────────────────────────────────────
 
@@ -77,26 +104,39 @@ public:
 
     /// @brief Launches the worker thread and invokes `run()`.
     ///
-    /// The `running_` flag is set to `true` before `run()` is called and
-    /// reset to `false` in a finally-like RAII guard, even if `run()` throws.
+    /// The `running_` flag is set to `true` inside the thread body with
+    /// release ordering and reset to `false` (also release) when `run()`
+    /// returns or throws. `is_running()` reads it with acquire ordering.
     /// Exceptions thrown by `run()` are caught and silently swallowed to
     /// prevent `std::terminate`; the flag is still cleared on exit.
     ///
     /// @throws std::runtime_error if the thread is already running.
     void start() {
-        if (running_.load(std::memory_order_relaxed)) {
+        // [FIX 3 — TOCTOU Race on running_ in start()]
+        // Guard uses joinable() NOT running_. joinable() is set synchronously
+        // by the std::thread constructor before the lambda body executes.
+        // running_ is set INSIDE the lambda and has a TOCTOU window: two
+        // concurrent start() calls could both read running_=false and each
+        // launch a thread, running run() concurrently on the same object.
+        if (thread_.joinable()) {
             throw std::runtime_error("ThreadBase[" + name_ + "]: already running");
         }
 
-        stop_flag_.store(false, std::memory_order_relaxed);
+        // [ARM MEMORY MODEL] release: pairs with the acquire load in
+        // StopToken::stop_requested() so the cleared flag is immediately
+        // visible to the new thread before it calls run().
+        stop_flag_.store(false, std::memory_order_release);
 
         thread_ = std::thread([this]() {
-            running_.store(true, std::memory_order_relaxed);
+            // [ARM MEMORY MODEL] release: ensures is_running() callers on
+            // other threads see true only after all prior stores are visible.
+            running_.store(true, std::memory_order_release);
 
             // RAII guard: always clear the flag when run() returns or throws.
             struct FinallyGuard {
                 std::atomic<bool>& flag;
-                ~FinallyGuard() { flag.store(false, std::memory_order_relaxed); }
+                // [ARM MEMORY MODEL] release: pairs with acquire in is_running().
+                ~FinallyGuard() { flag.store(false, std::memory_order_release); }
             } guard{running_};
 
             try {
@@ -113,7 +153,13 @@ public:
     /// has joined. Safe to call even if the thread was never started, or has
     /// already stopped.
     void stop() {
-        stop_flag_.store(true, std::memory_order_relaxed);
+        // [FIX 2 — Relaxed Memory Ordering Hangs on ARM]
+        // [ARM MEMORY MODEL] release: guarantees the true value is visible to
+        // the worker thread's acquire load in StopToken::stop_requested()
+        // before the thread exits its run() loop. Without this, on Apple
+        // Silicon (ARMv8 weakly-ordered), the store may sit in the store
+        // buffer and the worker thread may spin forever, causing join() to hang.
+        stop_flag_.store(true, std::memory_order_release);
         if (thread_.joinable()) {
             thread_.join();
         }
@@ -126,7 +172,10 @@ public:
     /// must not rely on this for strict synchronisation — use it only for
     /// lightweight status checks and logging.
     [[nodiscard]] bool is_running() const noexcept {
-        return running_.load(std::memory_order_relaxed);
+        // [ARM MEMORY MODEL] acquire: pairs with the release store inside the
+        // thread lambda so that once this returns true (or false after stop),
+        // all stores made by the worker thread before that transition are visible.
+        return running_.load(std::memory_order_acquire);
     }
 
     /// @brief Returns the human-readable name assigned at construction.
