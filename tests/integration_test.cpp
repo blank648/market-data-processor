@@ -203,6 +203,7 @@ TEST(IntegrationTest, BookProcessorReceivesTicks) {
     FeedConfig config = FeedConfig::default_config();
     config.tick_rate_hz = 1000;
     config.symbols = {"AAPL", "MSFT", "GOOG", "AMZN", "META"};
+    config.initial_prices = {150.0, 300.0, 2800.0, 3400.0, 350.0}; // Must match length of symbols
 
     FeedSimulator sim(config, sim_to_parser);
     TickParser    parser(sim_to_parser, parser_to_norm);
