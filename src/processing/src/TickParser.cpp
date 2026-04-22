@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "processing/TickParser.hpp"
-
+#include "infra/Logger.hpp"
 #include <cmath>
 #include <thread>
 #include <utility>
@@ -21,11 +21,15 @@ uint64_t TickParser::ticks_rejected() const noexcept {
 }
 
 void TickParser::run(StopToken st) {
+    auto log_ = mdp::Logger::get("TickParser");
+    log_->info("TickParser starting");
+    
     MarketTick tick;
     while (!st.stop_requested()) {
         if (input_.try_pop(tick)) {
             if (validate(tick)) {
                 enrich(tick);
+                log_->trace("Parsed tick: {}", tick.to_string());
                 // [COUNTER INTEGRITY] Only increment on confirmed push.
                 // Tick lost during shutdown (stop requested mid-spin) is NOT counted.
                 bool pushed = false;
@@ -51,6 +55,7 @@ void TickParser::run(StopToken st) {
     while (input_.try_pop(tick)) {
         if (validate(tick)) {
             enrich(tick);
+            log_->trace("Parsed tick: {}", tick.to_string());
             // Ignore back-pressure and just try to push; drop if full
             if (output_.try_push(std::move(tick))) {
                 ticks_processed_.fetch_add(1, std::memory_order_relaxed);
@@ -59,6 +64,8 @@ void TickParser::run(StopToken st) {
             ticks_rejected_.fetch_add(1, std::memory_order_relaxed);
         }
     }
+    
+    log_->info("TickParser stopped, ticks_parsed={}", ticks_processed_.load(std::memory_order_relaxed));
 }
 
 bool TickParser::validate(const MarketTick& tick) const noexcept {

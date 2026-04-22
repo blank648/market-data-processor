@@ -1,5 +1,5 @@
 #include "feed/FeedSimulator.hpp"
-
+#include "infra/Logger.hpp"
 #include <algorithm>
 #include <thread>
 
@@ -25,9 +25,14 @@ uint64_t FeedSimulator::ticks_dropped() const noexcept {
 }
 
 void FeedSimulator::run(StopToken st) {
+    auto log_ = mdp::Logger::get("FeedSimulator");
+    
     if (config_.tick_rate_hz == 0 || config_.symbols.empty()) {
+        log_->info("FeedSimulator stopped, ticks_generated={}", ticks_published_.load(std::memory_order_relaxed));
         return;
     }
+
+    log_->info("FeedSimulator starting, interval={}ms", 1000.0 / config_.tick_rate_hz);
 
     auto interval = std::chrono::nanoseconds(1'000'000'000ULL / config_.tick_rate_hz);
     auto next_tick = std::chrono::steady_clock::now();
@@ -35,6 +40,7 @@ void FeedSimulator::run(StopToken st) {
     while (!st.stop_requested()) {
         for (std::size_t symbol_idx = 0; symbol_idx < config_.symbols.size(); ++symbol_idx) {
             auto tick = generate_tick(symbol_idx);
+            log_->trace("Tick generated: {} @ {:.4f}", tick.symbol.data(), tick.price);
             if (output_.try_push(std::move(tick))) {
                 ticks_published_.fetch_add(1, std::memory_order_relaxed);
             } else {
@@ -44,6 +50,8 @@ void FeedSimulator::run(StopToken st) {
         
         rate_control(next_tick, interval);
     }
+    
+    log_->info("FeedSimulator stopped, ticks_generated={}", ticks_published_.load(std::memory_order_relaxed));
 }
 
 // [THREAD OWNERSHIP] rng_ and price_noise_ are accessed EXCLUSIVELY

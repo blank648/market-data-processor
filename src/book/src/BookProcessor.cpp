@@ -9,13 +9,7 @@
 #include <cstring>
 #include <thread>
 
-// [SPDLOG REMOVED] All logging in BookProcessor uses fprintf(stderr).
-// spdlog registers thread-local destructors via __cxa_thread_atexit on
-// any thread that calls it. When the jthread created by ThreadBase::start()
-// finishes, spdlog's global registry may already be partially destroyed
-// (static destruction order on program exit), causing EXC_BAD_ACCESS in
-// __thread_struct::~__thread_struct(). fprintf is async-signal-safe
-// and has no global C++ lifetime dependency.
+#include "infra/Logger.hpp"
 
 namespace mdp {
 
@@ -50,6 +44,9 @@ uint64_t BookProcessor::books_active() const noexcept {
 }
 
 void BookProcessor::run(StopToken st) {
+    auto log_ = mdp::Logger::get("BookProcessor");
+    log_->info("BookProcessor starting, tracking {} symbols", books_active());
+    
     MarketTick tick;
     while (!st.stop_requested()) {
         if (!input_.try_pop(tick)) {
@@ -71,6 +68,7 @@ void BookProcessor::run(StopToken st) {
         const OrderSide side = determine_side(symbol, tick.price);
         const BookDelta delta = tick_to_delta(tick, side);
         it->second.apply(delta);
+        log_->trace("Applied tick to book: {}", symbol);
         pushed = true;
         if (pushed) {
             ticks_processed_.fetch_add(1, std::memory_order_relaxed);
@@ -90,8 +88,11 @@ void BookProcessor::run(StopToken st) {
         const OrderSide side = determine_side(symbol, tick.price);
         const BookDelta delta = tick_to_delta(tick, side);
         it->second.apply(delta);
+        log_->trace("Applied tick to book: {}", symbol);
         ticks_processed_.fetch_add(1, std::memory_order_relaxed);
     }
+    
+    log_->info("BookProcessor stopped");
 }
 
 OrderSide BookProcessor::determine_side(std::string_view symbol, double price) noexcept {

@@ -17,6 +17,7 @@ target_link_libraries(book PUBLIC
     processing
     spdlog::spdlog
 )
+target_link_libraries(book PRIVATE infra)
 
 # book depends on processing for TickRingBuffer4K type
 # book depends on core for MarketTick, ThreadBase

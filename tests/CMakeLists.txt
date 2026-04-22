@@ -12,6 +12,7 @@ target_link_libraries(unit_tests PRIVATE
     core
     feed
     book
+    infra
     GTest::gtest_main
     GTest::gmock
 )

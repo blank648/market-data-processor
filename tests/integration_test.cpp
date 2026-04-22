@@ -19,12 +19,23 @@
 #include "book/BookTypes.hpp"
 #include "book/IOrderBook.hpp"
 #include "book/OrderBook.hpp"
+#include "infra/Logger.hpp"
 
 using namespace mdp;
 
+class IntegrationTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        mdp::Logger::init("market-data-test", spdlog::level::warn);
+    }
+    void TearDown() override {
+        mdp::Logger::shutdown();
+    }
+};
+
 // ── TEST 1: FullPipelineProducesValidTicks ──
 
-TEST(IntegrationTest, FullPipelineProducesValidTicks) {
+TEST_F(IntegrationTest, FullPipelineProducesValidTicks) {
     // Setup
     TickRingBuffer16K sim_to_parser;
     TickRingBuffer4K  parser_to_norm;
@@ -91,7 +102,7 @@ TEST(IntegrationTest, FullPipelineProducesValidTicks) {
 
 // ── TEST 2: PipelineHandlesHighThroughput ──
 
-TEST(IntegrationTest, PipelineHandlesHighThroughputWithoutCrash) {
+TEST_F(IntegrationTest, PipelineHandlesHighThroughputWithoutCrash) {
     TickRingBuffer16K sim_to_parser;
     TickRingBuffer4K  parser_to_norm;
     TickRingBuffer4K  norm_output;
@@ -148,7 +159,7 @@ TEST(IntegrationTest, PipelineHandlesHighThroughputWithoutCrash) {
 
 // ── TEST 3: PipelineStopIsCleanWithRAII ──
 
-TEST(IntegrationTest, PipelineStopIsCleanWithRAII) {
+TEST_F(IntegrationTest, PipelineStopIsCleanWithRAII) {
     // Verify that RAII destruction order doesn't hang or crash
     {
         TickRingBuffer16K sim_to_parser;
@@ -193,7 +204,7 @@ TEST(IntegrationTest, PipelineStopIsCleanWithRAII) {
 
 // ── TEST 4: BookProcessorReceivesTicks ──
 
-TEST(IntegrationTest, BookProcessorReceivesTicks) {
+TEST_F(IntegrationTest, BookProcessorReceivesTicks) {
     // Pipeline: Sim → Parser → Normalizer → BookProcessor
     // Config: 5 symbols, 1000 Hz, run for 300ms
     TickRingBuffer16K sim_to_parser;

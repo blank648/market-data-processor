@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "processing/Normalizer.hpp"
-
+#include "infra/Logger.hpp"
 #include <thread>
 #include <utility>
 
@@ -26,6 +26,9 @@ NormalizerStats::Snapshot Normalizer::stats() const noexcept {
 }
 
 void Normalizer::run(StopToken st) {
+    auto log_ = mdp::Logger::get("Normalizer");
+    log_->info("Normalizer starting");
+    
     MarketTick tick;
     while (!st.stop_requested()) {
         if (input_.try_pop(tick)) {
@@ -39,6 +42,7 @@ void Normalizer::run(StopToken st) {
             }
             
             update_state(tick);
+            log_->trace("Forwarding tick: {}", tick.to_string());
             
             // [COUNTER INTEGRITY] Only increment on confirmed push.
             // Tick lost during shutdown (stop requested mid-spin) is NOT counted.
@@ -71,12 +75,18 @@ void Normalizer::run(StopToken st) {
         }
         
         update_state(tick);
+        log_->trace("Forwarding tick: {}", tick.to_string());
         
         // Ignore back-pressure and just try to push; drop if full
         if (output_.try_push(std::move(tick))) {
             stats_.ticks_forwarded.fetch_add(1, std::memory_order_relaxed);
         }
     }
+    
+    log_->info("Normalizer stopped, stats: fwd={} dedup={} reorder={}", 
+               stats_.ticks_forwarded.load(std::memory_order_relaxed), 
+               stats_.ticks_deduplicated.load(std::memory_order_relaxed), 
+               stats_.ticks_reordered.load(std::memory_order_relaxed));
 }
 
 bool Normalizer::is_duplicate(const MarketTick& tick) const noexcept {
