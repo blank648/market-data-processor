@@ -15,6 +15,10 @@
 #include "processing/Normalizer.hpp"
 #include "core/RingBuffer.hpp"
 #include "core/MarketTick.hpp"
+#include "book/BookProcessor.hpp"
+#include "book/BookTypes.hpp"
+#include "book/IOrderBook.hpp"
+#include "book/OrderBook.hpp"
 
 using namespace mdp;
 
@@ -185,4 +189,81 @@ TEST(IntegrationTest, PipelineStopIsCleanWithRAII) {
         // as producer is destroyed last, but RAII should still not hang explicitly inside dtors.
     }
     SUCCEED();  // If we reach here, RAII worked correctly
+}
+
+// ── TEST 4: BookProcessorReceivesTicks ──
+
+TEST(IntegrationTest, BookProcessorReceivesTicks) {
+    // Pipeline: Sim → Parser → Normalizer → BookProcessor
+    // Config: 5 symbols, 1000 Hz, run for 300ms
+    TickRingBuffer16K sim_to_parser;
+    TickRingBuffer4K  parser_to_norm;
+    TickRingBuffer4K  norm_output;
+
+    FeedConfig config = FeedConfig::default_config();
+    config.tick_rate_hz = 1000;
+    config.symbols = {"AAPL", "MSFT", "GOOG", "AMZN", "META"};
+
+    FeedSimulator sim(config, sim_to_parser);
+    TickParser    parser(sim_to_parser, parser_to_norm);
+    Normalizer    norm(parser_to_norm, norm_output);
+    BookProcessor book(norm_output);
+
+    // Start consumers before producers
+    book.start();
+    norm.start();
+    parser.start();
+    sim.start();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+
+    // Stop producers before consumers, draining buffers between stages
+    auto drain_buffer = [](auto& buf,
+                           std::chrono::milliseconds timeout = std::chrono::milliseconds(200)) {
+        auto deadline = std::chrono::steady_clock::now() + timeout;
+        while (!buf.empty() && std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
+        }
+    };
+
+    sim.stop();
+    drain_buffer(sim_to_parser);
+    parser.stop();
+    drain_buffer(parser_to_norm);
+    norm.stop();
+    drain_buffer(norm_output);
+    book.stop();
+
+    // [TEARDOWN ORDER] Explicit stop() ensures each jthread is joined
+    // before the next stage's buffer reference becomes invalid.
+    // Relying on destructor order is fragile when stages share references.
+    book.stop();
+    norm.stop();
+    parser.stop();
+    sim.stop();
+
+    // Assertions
+    EXPECT_GT(book.ticks_processed(), 0);
+    EXPECT_EQ(book.books_active(), 5);
+
+    GTEST_LOG_(INFO) << "Book ticks processed: " << book.ticks_processed();
+    GTEST_LOG_(INFO) << "Active books: " << book.books_active();
+
+    bool at_least_one_valid_book = false;
+    for (const auto& symbol : config.symbols) {
+        const auto* b = book.book(symbol);
+        ASSERT_NE(b, nullptr) << "Book for " << symbol << " is null";
+
+        auto tob = b->top_of_book();
+        GTEST_LOG_(INFO) << "  [" << symbol << "] Top-of-book spread: " << tob.spread;
+
+        if (tob.is_valid()) {
+            at_least_one_valid_book = true;
+            EXPECT_GT(tob.spread, 0.0);
+            EXPECT_GT(tob.best_bid, 0.0);
+            EXPECT_GT(tob.best_ask, 0.0);
+            EXPECT_GE(tob.spread, 0.0); // Spread can be 0 if only one side has levels
+        }
+    }
+    EXPECT_TRUE(at_least_one_valid_book) << "Expected at least one symbol to have a valid, two-sided book";
 }

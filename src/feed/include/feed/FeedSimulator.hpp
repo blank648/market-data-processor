@@ -22,7 +22,7 @@ namespace mdp {
  * produce market ticks and push them into an output lock-free SPSC ring buffer.
  */
 class FeedSimulator final : public ThreadBase, public IFeedSource {
-public:
+   public:
     /**
      * @brief Constructs a new FeedSimulator.
      * @param config The feed configuration (symbols, rate, volatility).
@@ -30,7 +30,9 @@ public:
      */
     explicit FeedSimulator(FeedConfig config, TickRingBuffer16K& output);
 
-    ~FeedSimulator() override { stop(); }
+    ~FeedSimulator() override {
+        stop();
+    }
 
     // Explicit delegation resolves name collision between
     // ThreadBase (implementation) and IFeedSource (interface).
@@ -40,14 +42,14 @@ public:
      * @brief Starts the underlying simulation thread.
      */
     void start() override {
-        ThreadBase::start();   // explicitly delegates to jthread creation
+        ThreadBase::start();  // explicitly delegates to jthread creation
     }
 
     /**
      * @brief Stops the underlying simulation thread gracefully.
      */
     void stop() override {
-        ThreadBase::stop();    // explicitly delegates to request_stop + join
+        ThreadBase::stop();  // explicitly delegates to request_stop + join
     }
 
     /**
@@ -78,7 +80,7 @@ public:
      */
     uint64_t ticks_dropped() const noexcept override;
 
-private:
+   private:
     /**
      * @brief The thread function generating ticks loop.
      * @param st A StopToken provided by ThreadBase to signal stopping.
@@ -123,4 +125,4 @@ private:
     std::atomic<uint64_t> ticks_dropped_{0};
 };
 
-} // namespace mdp
+}  // namespace mdp

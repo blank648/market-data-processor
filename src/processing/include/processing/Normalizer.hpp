@@ -36,11 +36,9 @@ struct NormalizerStats {
         uint64_t ticks_reordered{0};
     };
     [[nodiscard]] Snapshot snapshot() const noexcept {
-        return {
-            ticks_forwarded.load(std::memory_order_relaxed),
-            ticks_deduplicated.load(std::memory_order_relaxed),
-            ticks_reordered.load(std::memory_order_relaxed)
-        };
+        return {ticks_forwarded.load(std::memory_order_relaxed),
+                ticks_deduplicated.load(std::memory_order_relaxed),
+                ticks_reordered.load(std::memory_order_relaxed)};
     }
 };
 
@@ -50,21 +48,23 @@ struct NormalizerStats {
 /// applies deduplication and monotonic timestamp checking per symbol, and
 /// forwards clean ticks to the next stage buffer.
 class Normalizer final : public ThreadBase {
-public:
+   public:
     /// @brief Constructs a Normalizer connecting input and output ring buffers.
     ///
     /// @param input  Buffer to read validated ticks from.
     /// @param output Buffer to write normalized ticks to.
     explicit Normalizer(TickRingBuffer4K& input, TickRingBuffer4K& output);
 
-    ~Normalizer() override { stop(); }
+    ~Normalizer() override {
+        stop();
+    }
 
     /// @brief Returns a thread-safe snapshot of the current statistics.
     ///
     /// @return A copy of the current NormalizerStats::Snapshot.
     [[nodiscard]] NormalizerStats::Snapshot stats() const noexcept;
 
-private:
+   private:
     /// @brief Main processing loop for the normalizer thread.
     ///
     /// @param st Token to check for cooperative cancellation.
@@ -76,7 +76,8 @@ private:
     /// @return true if it's a duplicate; false otherwise.
     [[nodiscard]] bool is_duplicate(const MarketTick& tick) const noexcept;
 
-    /// @brief Checks if a tick's timestamp is strictly less than the last processed timestamp for its symbol.
+    /// @brief Checks if a tick's timestamp is strictly less than the last processed timestamp for
+    /// its symbol.
     ///
     /// @param tick The tick to check.
     /// @return true if reordered; false otherwise.
@@ -100,18 +101,18 @@ private:
     // timestamp and the full last tick. We use std::array<char, 8> for keys
     // instead of std::string_view since string views would dangerously point
     // to memory inside temporary MarketTick structs that get overwritten.
-    
+
     // [NOT THREAD-SAFE] Accessed exclusively from run() (jthread).
     // stats() does not touch these maps — safe today.
     // Any future cross-thread access requires a mutex guard.
-    std::unordered_map<std::array<char, 8>, int64_t, SymbolHash>    last_timestamp_;
-    
+    std::unordered_map<std::array<char, 8>, int64_t, SymbolHash> last_timestamp_;
+
     // [NOT THREAD-SAFE] Same contract as last_timestamp_.
     // Future extension: if read from metrics/dashboard thread,
     // protect both maps with a std::shared_mutex (read-heavy access).
     std::unordered_map<std::array<char, 8>, MarketTick, SymbolHash> last_tick_;
 
-    NormalizerStats    stats_;
+    NormalizerStats stats_;
 };
 
 }  // namespace mdp

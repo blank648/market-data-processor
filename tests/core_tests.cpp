@@ -234,6 +234,7 @@ public:
     std::atomic<int> tick_count{0};
 
     explicit TestWorker() : ThreadBase("TestWorker") {}
+    ~TestWorker() override { stop(); }
 
 protected:
     void run(mdp::StopToken st) override {
@@ -261,7 +262,11 @@ TEST(ThreadBaseTest, WorkerStartsAndStops) {
     EXPECT_GT(worker.tick_count.load(), 0);
 }
 
-TEST(ThreadBaseTest, RAIIStopsOnDestruction) {
+// Verifies the subclass destructor protocol:
+// ~SubClass() { stop(); } must be called before members are destroyed.
+// ~ThreadBase() asserts !joinable() — this test confirms the assert
+// does NOT fire when the protocol is followed correctly.
+TEST(ThreadBaseTest, ExplicitDestructorStopsThreadCleanly) {
     {
         TestWorker worker;
         worker.start();

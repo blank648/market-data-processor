@@ -46,6 +46,19 @@ void TickParser::run(StopToken st) {
             std::this_thread::yield();  // nothing to read — yield to OS
         }
     }
+
+    // Drain remaining ticks after stop is requested
+    while (input_.try_pop(tick)) {
+        if (validate(tick)) {
+            enrich(tick);
+            // Ignore back-pressure and just try to push; drop if full
+            if (output_.try_push(std::move(tick))) {
+                ticks_processed_.fetch_add(1, std::memory_order_relaxed);
+            }
+        } else {
+            ticks_rejected_.fetch_add(1, std::memory_order_relaxed);
+        }
+    }
 }
 
 bool TickParser::validate(const MarketTick& tick) const noexcept {

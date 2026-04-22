@@ -13,7 +13,7 @@ namespace mdp {
 
 /// @brief A lightweight stop token polyfill for environments lacking C++20 <stop_token>.
 class StopToken {
-   public:
+public:
     explicit StopToken(const std::atomic<bool>* flag) noexcept : flag_(flag) {}
 
     [[nodiscard]] bool stop_requested() const noexcept {
@@ -23,7 +23,7 @@ class StopToken {
         return flag_ ? flag_->load(std::memory_order_acquire) : false;
     }
 
-   private:
+private:
     const std::atomic<bool>* flag_;
 };
 
@@ -68,7 +68,7 @@ class StopToken {
 ///     printer.stop();   // or just let it go out of scope
 /// @endcode
 class ThreadBase {
-   public:
+public:
     // ─── Construction / Destruction ───────────────────────────────────────
 
     /// @brief Constructs a ThreadBase with the given human-readable name.
@@ -90,16 +90,16 @@ class ThreadBase {
         // have already been destroyed, causing use-after-free if run() is
         // still executing. The subclass must call stop() first.
         // DIAGNOSTIC: if this fires, a subclass forgot ~SubClass() override { stop(); }
-        // assert(!thread_.joinable());  // NOLINT(misc-include-cleaner)
+        //assert(!thread_.joinable());  // NOLINT(misc-include-cleaner)
         stop();
     }
 
     // ─── Non-copyable, non-movable ────────────────────────────────────────
 
-    ThreadBase(const ThreadBase&) = delete;
+    ThreadBase(const ThreadBase&)            = delete;
     ThreadBase& operator=(const ThreadBase&) = delete;
-    ThreadBase(ThreadBase&&) = delete;
-    ThreadBase& operator=(ThreadBase&&) = delete;
+    ThreadBase(ThreadBase&&)                 = delete;
+    ThreadBase& operator=(ThreadBase&&)      = delete;
 
     // ─── Public API ───────────────────────────────────────────────────────
 
@@ -137,9 +137,7 @@ class ThreadBase {
             struct FinallyGuard {
                 std::atomic<bool>& flag;
                 // [ARM MEMORY MODEL] release: pairs with acquire in is_running().
-                ~FinallyGuard() {
-                    flag.store(false, std::memory_order_release);
-                }
+                ~FinallyGuard() { flag.store(false, std::memory_order_release); }
             } guard{running_};
 
             try {
@@ -182,11 +180,9 @@ class ThreadBase {
     }
 
     /// @brief Returns the human-readable name assigned at construction.
-    [[nodiscard]] const std::string& name() const noexcept {
-        return name_;
-    }
+    [[nodiscard]] const std::string& name() const noexcept { return name_; }
 
-   protected:
+protected:
     // ─── Protected Interface ──────────────────────────────────────────────
 
     /// @brief Override to implement the thread's processing loop.
@@ -200,8 +196,8 @@ class ThreadBase {
     /// @brief The name supplied at construction; accessible to subclasses.
     const std::string name_;
 
-   private:
-    std::thread thread_;
+private:
+    std::thread       thread_;
     std::atomic<bool> running_{false};
     std::atomic<bool> stop_flag_{false};
 };

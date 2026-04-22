@@ -58,6 +58,25 @@ void Normalizer::run(StopToken st) {
             std::this_thread::yield();  // nothing to read — yield to OS
         }
     }
+
+    // Drain remaining ticks after stop is requested
+    while (input_.try_pop(tick)) {
+        if (is_duplicate(tick)) {
+            stats_.ticks_deduplicated.fetch_add(1, std::memory_order_relaxed);
+            continue;
+        }
+        if (is_reordered(tick)) {
+            stats_.ticks_reordered.fetch_add(1, std::memory_order_relaxed);
+            continue;
+        }
+        
+        update_state(tick);
+        
+        // Ignore back-pressure and just try to push; drop if full
+        if (output_.try_push(std::move(tick))) {
+            stats_.ticks_forwarded.fetch_add(1, std::memory_order_relaxed);
+        }
+    }
 }
 
 bool Normalizer::is_duplicate(const MarketTick& tick) const noexcept {
