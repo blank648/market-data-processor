@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y cmake ninja-build gcc-14 g++-14 clang-18 libclang-18-dev
+          sudo apt-get install -y -o Acquire::Retry=3 cmake ninja-build gcc-14 g++-14
 
       - name: Restore dependency cache
         uses: actions/cache/restore@v4
@@ -98,7 +98,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y cmake ninja-build gcc-14 g++-14
+          sudo apt-get install -y -o Acquire::Retry=3 cmake ninja-build gcc-14 g++-14
 
       - name: Restore release cache
         uses: actions/cache/restore@v4
