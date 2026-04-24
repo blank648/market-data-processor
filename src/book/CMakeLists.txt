@@ -5,9 +5,14 @@ target_sources(book PRIVATE
     src/BookProcessor.cpp
 )
 
-target_include_directories(book PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
+target_sources(book PUBLIC
+    FILE_SET HEADERS
+    BASE_DIRS include
+    FILES
+        include/book/OrderBook.hpp
+        include/book/BookProcessor.hpp
+        include/book/IOrderBook.hpp
+        include/book/BookTypes.hpp
 )
 
 target_compile_features(book PUBLIC cxx_std_20)

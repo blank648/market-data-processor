@@ -6,6 +6,7 @@ target_sources(unit_tests PRIVATE
     core_tests.cpp
     integration_test.cpp
     book_tests.cpp
+    infra_tests.cpp
 )
 
 target_link_libraries(unit_tests PRIVATE
@@ -29,4 +30,5 @@ gtest_add_tests(TARGET unit_tests
         ${CMAKE_CURRENT_SOURCE_DIR}/core_tests.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/integration_test.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/book_tests.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/infra_tests.cpp
 )
