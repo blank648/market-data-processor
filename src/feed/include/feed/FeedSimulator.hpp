@@ -11,8 +11,21 @@
 #include "core/ThreadBase.hpp"
 #include "feed/FeedConfig.hpp"
 #include "feed/IFeedSource.hpp"
+#include <string>
 
 namespace mdp {
+
+/**
+ * @struct SymbolState
+ * @brief Internal state for a single symbol's price/spread simulation.
+ */
+struct SymbolState {
+    std::string symbol;
+    double mid_price{100.0};
+    double spread{0.02};
+    double bid_size{100.0};
+    double ask_size{100.0};
+};
 
 /**
  * @class FeedSimulator
@@ -114,11 +127,10 @@ class FeedSimulator final : public ThreadBase, public IFeedSource {
 
     FeedConfig config_;
     TickRingBuffer16K& output_;
-    std::vector<double> current_prices_;  // mutable random walk state
+    std::vector<SymbolState> symbol_states_;
 
-    // RNG — Mersenne Twister, seeded with random_device
-    std::mt19937 rng_;
-    std::normal_distribution<double> price_noise_;  // mean=0, stddev=volatility
+    // RNG — Mersenne Twister 64-bit, seeded with random_device
+    std::mt19937_64 rng_;
 
     // Counters (atomics — readable from outside without stopping)
     std::atomic<uint64_t> ticks_published_{0};

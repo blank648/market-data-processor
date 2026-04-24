@@ -1,0 +1,32 @@
+name: Benchmarks
+
+on:
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Build Release
+        run: |
+          cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-release --parallel
+      
+      - name: Run full benchmark suite
+        run: |
+          ./build-release/benchmarks/mdp-benchmarks \
+            --benchmark_out=benchmarks/full_results.json \
+            --benchmark_out_format=json \
+            --benchmark_min_time=1.0s \
+            2>&1 | tee benchmarks/full_results.txt
+      
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-benchmark-results
+          path: |
+            benchmarks/full_results.json
+            benchmarks/full_results.txt
+          retention-days: 90

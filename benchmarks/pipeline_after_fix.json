@@ -1,0 +1,104 @@
+{
+  "context": {
+    "date": "2026-04-24T16:18:35+03:00",
+    "host_name": "MacBook-Pro-van-Adrian.local",
+    "executable": "./build-release/benchmarks/mdp-benchmarks",
+    "num_cpus": 12,
+    "mhz_per_cpu": 24,
+    "cpu_scaling_enabled": false,
+    "caches": [
+      {
+        "type": "Data",
+        "level": 1,
+        "size": 65536,
+        "num_sharing": 0
+      },
+      {
+        "type": "Instruction",
+        "level": 1,
+        "size": 131072,
+        "num_sharing": 0
+      },
+      {
+        "type": "Unified",
+        "level": 2,
+        "size": 4194304,
+        "num_sharing": 1
+      }
+    ],
+    "load_avg": [1.68311,2.50293,3.39111],
+    "library_version": "v1.8.4",
+    "library_build_type": "release",
+    "json_schema_version": 1
+  },
+  "benchmarks": [
+    {
+      "name": "BM_Pipeline_Throughput/1000/real_time",
+      "family_index": 0,
+      "per_family_instance_index": 0,
+      "run_name": "BM_Pipeline_Throughput/1000/real_time",
+      "run_type": "iteration",
+      "repetitions": 1,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 14,
+      "real_time": 1.0194014578259417e+02,
+      "cpu_time": 5.5000000000074833e-03,
+      "time_unit": "ms",
+      "book_ticks/s": 3.0017614517895672e+03,
+      "drop_rate_%": 0.0000000000000000e+00,
+      "items_per_second": 3.0017614517895672e+03
+    },
+    {
+      "name": "BM_Pipeline_Throughput/5000/real_time",
+      "family_index": 0,
+      "per_family_instance_index": 1,
+      "run_name": "BM_Pipeline_Throughput/5000/real_time",
+      "run_type": "iteration",
+      "repetitions": 1,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 14,
+      "real_time": 1.0165949400314796e+02,
+      "cpu_time": 5.0000000000010357e-03,
+      "time_unit": "ms",
+      "book_ticks/s": 1.5001760962180313e+04,
+      "drop_rate_%": 0.0000000000000000e+00,
+      "items_per_second": 1.5001760962180313e+04
+    },
+    {
+      "name": "BM_Pipeline_Throughput/10000/real_time",
+      "family_index": 0,
+      "per_family_instance_index": 2,
+      "run_name": "BM_Pipeline_Throughput/10000/real_time",
+      "run_type": "iteration",
+      "repetitions": 1,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 14,
+      "real_time": 1.0174411014304496e+02,
+      "cpu_time": 4.3571428571333370e-03,
+      "time_unit": "ms",
+      "book_ticks/s": 3.0001736667689194e+04,
+      "drop_rate_%": 0.0000000000000000e+00,
+      "items_per_second": 3.0001736667689194e+04
+    },
+    {
+      "name": "BM_Pipeline_Throughput/50000/real_time",
+      "family_index": 0,
+      "per_family_instance_index": 3,
+      "run_name": "BM_Pipeline_Throughput/50000/real_time",
+      "run_type": "iteration",
+      "repetitions": 1,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 14,
+      "real_time": 1.0147844049996431e+02,
+      "cpu_time": 4.4285714285718925e-03,
+      "time_unit": "ms",
+      "book_ticks/s": 1.5000019353166025e+05,
+      "drop_rate_%": 0.0000000000000000e+00,
+      "items_per_second": 1.5000019353166025e+05
+    }
+  ]
+}

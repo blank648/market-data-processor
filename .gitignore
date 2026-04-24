@@ -22,5 +22,16 @@ compile_commands.json
 
 # Test & benchmark binaries
 unit_tests
-benchmarks
 
+# Build and CI outputs
+build-debug/
+build-release/
+build-tsan/
+*.json.user
+health_after.json
+health_ci.json
+tsan_output.txt
+
+# Keep baseline benchmarks
+!benchmarks/baseline_results.json
+!benchmarks/baseline_results.txt
