@@ -55,6 +55,14 @@ if(ENABLE_SANITIZERS)
     endif()
 endif()
 
+# ThreadSanitizer build — mutually exclusive with ASan
+# Usage: cmake -B build-tsan -S . -DCMAKE_BUILD_TYPE=Tsan
+if(CMAKE_BUILD_TYPE STREQUAL "Tsan")
+    add_compile_options(-fsanitize=thread -fno-omit-frame-pointer -g -O1)
+    add_link_options(-fsanitize=thread)
+    message(STATUS "ThreadSanitizer enabled")
+endif()
+
 add_subdirectory(src/core)
 add_subdirectory(src/feed)
 add_subdirectory(src/processing)
