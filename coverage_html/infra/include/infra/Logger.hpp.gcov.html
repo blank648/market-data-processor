@@ -1,0 +1,140 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage_filtered.info - infra/include/infra/Logger.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="index.html" title="Click to go to directory infra/include/infra">infra/include/infra</a> - Logger.hpp<span style="font-size: 80%;"> (source / <a href="Logger.hpp.func-c.html" title="Click to go to function table">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage_filtered.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">27</td>
+            <td class="headerCovTableEntry">27</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2026-05-10 12:00:16</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">3</td>
+          </tr>
+                  <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // Copyright (c) 2026 Market Data Processor Project. All rights reserved.</span>
+<span id="L2"><span class="lineNum">       2</span>              : // SPDX-License-Identifier: MIT</span>
+<span id="L3"><span class="lineNum">       3</span>              : </span>
+<span id="L4"><span class="lineNum">       4</span>              : #pragma once</span>
+<span id="L5"><span class="lineNum">       5</span>              : </span>
+<span id="L6"><span class="lineNum">       6</span>              : #include &lt;spdlog/spdlog.h&gt;</span>
+<span id="L7"><span class="lineNum">       7</span>              : #include &lt;spdlog/sinks/stdout_color_sinks.h&gt;</span>
+<span id="L8"><span class="lineNum">       8</span>              : #include &lt;string_view&gt;</span>
+<span id="L9"><span class="lineNum">       9</span>              : #include &lt;memory&gt;</span>
+<span id="L10"><span class="lineNum">      10</span>              : </span>
+<span id="L11"><span class="lineNum">      11</span>              : // Convenience macros for global logging (main/tests)</span>
+<span id="L12"><span class="lineNum">      12</span>              : #define LOG_TRACE(...)    SPDLOG_TRACE(__VA_ARGS__)</span>
+<span id="L13"><span class="lineNum">      13</span>              : #define LOG_DEBUG(...)    SPDLOG_DEBUG(__VA_ARGS__)</span>
+<span id="L14"><span class="lineNum">      14</span>              : #define LOG_INFO(...)     SPDLOG_INFO(__VA_ARGS__)</span>
+<span id="L15"><span class="lineNum">      15</span>              : #define LOG_WARN(...)     SPDLOG_WARN(__VA_ARGS__)</span>
+<span id="L16"><span class="lineNum">      16</span>              : #define LOG_ERROR(...)    SPDLOG_ERROR(__VA_ARGS__)</span>
+<span id="L17"><span class="lineNum">      17</span>              : #define LOG_CRITICAL(...) SPDLOG_CRITICAL(__VA_ARGS__)</span>
+<span id="L18"><span class="lineNum">      18</span>              : </span>
+<span id="L19"><span class="lineNum">      19</span>              : namespace mdp {</span>
+<span id="L20"><span class="lineNum">      20</span>              : </span>
+<span id="L21"><span class="lineNum">      21</span>              : class Logger {</span>
+<span id="L22"><span class="lineNum">      22</span>              : public:</span>
+<span id="L23"><span class="lineNum">      23</span>              :     // Initialize the global logger instance.</span>
+<span id="L24"><span class="lineNum">      24</span>              :     // Thread safety: spdlog::stdout_color_mt is multi-threaded safe.</span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">          10 :     static void init(std::string_view app_name, spdlog::level::level_enum level = spdlog::level::info) {</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">          10 :         auto logger = spdlog::stdout_color_mt(std::string(app_name));</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">          10 :         logger-&gt;set_level(level);</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">          10 :         logger-&gt;set_pattern(&quot;[%Y-%m-%d %H:%M:%S.%e] [%n] [%^%l%$] [thread %t] %v&quot;);</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">          10 :         spdlog::set_default_logger(logger);</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">          10 :         spdlog::set_level(level);</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">          10 :     }</span></span>
+<span id="L32"><span class="lineNum">      32</span>              : </span>
+<span id="L33"><span class="lineNum">      33</span>              :     // Get a component-scoped named logger.</span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">          64 :     static std::shared_ptr&lt;spdlog::logger&gt; get(std::string_view name) {</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">          64 :         auto logger = spdlog::get(std::string(name));</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">          64 :         if (!logger) {</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">          41 :             auto default_logger = spdlog::default_logger();</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">          41 :             if (default_logger) {</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">          37 :                 logger = default_logger-&gt;clone(std::string(name));</span></span>
+<span id="L40"><span class="lineNum">      40</span>              :                 // Inherit level from the default logger directly — avoids</span>
+<span id="L41"><span class="lineNum">      41</span>              :                 // spdlog::get_level() which dereferences default_logger_raw()</span>
+<span id="L42"><span class="lineNum">      42</span>              :                 // and crashes if no default logger has been registered yet.</span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">          37 :                 logger-&gt;set_level(default_logger-&gt;level());</span></span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">          37 :             } else {</span></span>
+<span id="L45"><span class="lineNum">      45</span>              :                 // Use raw sink to avoid spdlog::stdout_color_mt(), which both</span>
+<span id="L46"><span class="lineNum">      46</span>              :                 // creates AND auto-registers — causing spdlog::register_logger()</span>
+<span id="L47"><span class="lineNum">      47</span>              :                 // below to throw if the name was re-used after spdlog::shutdown().</span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">           4 :                 auto sink = std::make_shared&lt;spdlog::sinks::stdout_color_sink_mt&gt;();</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">           4 :                 logger = std::make_shared&lt;spdlog::logger&gt;(std::string(name), sink);</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">           4 :                 logger-&gt;set_pattern(&quot;[%Y-%m-%d %H:%M:%S.%e] [%n] [%^%l%$] [thread %t] %v&quot;);</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">           4 :                 logger-&gt;set_level(spdlog::level::info);</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">           4 :             }</span></span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">          41 :             spdlog::register_logger(logger);</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">          41 :         }</span></span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">          64 :         return logger;</span></span>
+<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">          64 :     }</span></span>
+<span id="L57"><span class="lineNum">      57</span>              : </span>
+<span id="L58"><span class="lineNum">      58</span>              :     // Shutdown spdlog (flush queues, drop loggers)</span>
+<span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC">          10 :     [[maybe_unused]] static void shutdown() {</span></span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">          10 :         spdlog::shutdown();</span></span>
+<span id="L61"><span class="lineNum">      61</span> <span class="tlaGNC">          10 :     }</span></span>
+<span id="L62"><span class="lineNum">      62</span>              : };</span>
+<span id="L63"><span class="lineNum">      63</span>              : </span>
+<span id="L64"><span class="lineNum">      64</span>              : } // namespace mdp</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.4-0</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>
