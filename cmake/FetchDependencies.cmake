@@ -24,12 +24,16 @@ set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(benchmark)
 
 # ── spdlog v1.14.1 ────────────────────────────────────────────────────────────
+# SPDLOG_USE_STD_FORMAT: use C++20 std::format instead of bundled fmtlib.
+# Required because bundled fmtlib's FMT_STRING macro (consteval) is rejected
+# by Apple Clang 17+ with stricter consteval enforcement.
 FetchContent_Declare(
         spdlog
         GIT_REPOSITORY https://github.com/gabime/spdlog.git
         GIT_TAG        v1.14.1
         GIT_SHALLOW    TRUE
 )
+set(SPDLOG_USE_STD_FORMAT ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(spdlog)
 
 # ── nlohmann/json v3.11.3 ─────────────────────────────────────────────────────

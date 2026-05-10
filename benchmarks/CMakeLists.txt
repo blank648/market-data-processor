@@ -3,14 +3,13 @@ add_executable(mdp-benchmarks
     tick_parser_bench.cpp
     normalizer_bench.cpp
     pipeline_bench.cpp
+    benchmarks.cpp
 )
 
 target_link_libraries(mdp-benchmarks PRIVATE
     feed
-    processing
     book
     infra
-    benchmark::benchmark
     benchmark::benchmark_main
 )
 

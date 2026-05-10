@@ -7,6 +7,8 @@ target_sources(unit_tests PRIVATE
     integration_test.cpp
     book_tests.cpp
     infra_tests.cpp
+    feed_tests.cpp
+    processing_tests.cpp
 )
 
 target_link_libraries(unit_tests PRIVATE

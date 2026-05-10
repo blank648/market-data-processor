@@ -37,12 +37,19 @@ public:
             auto default_logger = spdlog::default_logger();
             if (default_logger) {
                 logger = default_logger->clone(std::string(name));
+                // Inherit level from the default logger directly — avoids
+                // spdlog::get_level() which dereferences default_logger_raw()
+                // and crashes if no default logger has been registered yet.
+                logger->set_level(default_logger->level());
             } else {
-                logger = spdlog::stdout_color_mt(std::string(name));
+                // Use raw sink to avoid spdlog::stdout_color_mt(), which both
+                // creates AND auto-registers — causing spdlog::register_logger()
+                // below to throw if the name was re-used after spdlog::shutdown().
+                auto sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+                logger = std::make_shared<spdlog::logger>(std::string(name), sink);
                 logger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%n] [%^%l%$] [thread %t] %v");
+                logger->set_level(spdlog::level::info);
             }
-            // Named loggers inherit the global level
-            logger->set_level(spdlog::get_level());
             spdlog::register_logger(logger);
         }
         return logger;

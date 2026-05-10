@@ -8,6 +8,7 @@
 #include <chrono>
 #include <thread>
 #include <vector>
+#include <future>
 
 #include "feed/FeedSimulator.hpp"
 #include "feed/FeedConfig.hpp"
@@ -278,4 +279,112 @@ TEST_F(IntegrationTest, BookProcessorReceivesTicks) {
         }
     }
     EXPECT_TRUE(at_least_one_valid_book) << "Expected at least one symbol to have a valid, two-sided book";
+}
+
+// ── TEST 5: FullPipelineSmoke ──
+
+TEST_F(IntegrationTest, FullPipelineSmoke) {
+    TickRingBuffer16K sim_to_parser;
+    TickRingBuffer4K  parser_to_norm;
+    TickRingBuffer4K  norm_to_book; // The shared RingBuffer
+
+    FeedConfig config = FeedConfig::default_config();
+    config.tick_rate_hz = 5000;
+    FeedSimulator sim(config, sim_to_parser);
+    TickParser    parser(sim_to_parser, parser_to_norm);
+    Normalizer    norm(parser_to_norm, norm_to_book);
+    BookProcessor book(norm_to_book);
+
+    // Call start() on all in order
+    sim.start();
+    parser.start();
+    norm.start();
+    book.start();
+
+    // Sleep 200ms
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    // Call stop() in reverse order
+    book.stop();
+    norm.stop();
+    parser.stop();
+    sim.stop();
+
+    // Assertions
+    auto stats = norm.stats();
+    EXPECT_GT(stats.ticks_forwarded, 0u);
+    EXPECT_GE(stats.ticks_forwarded, stats.ticks_deduplicated);
+
+    // bookprocessor processes at least one symbol
+    bool has_active = false;
+    for (const auto& sym : config.symbols) {
+        auto b = book.book(sym);
+        if (b != nullptr && b->updates_applied() > 0) {
+            has_active = true;
+            break;
+        }
+    }
+    EXPECT_TRUE(has_active);
+
+    // No component is_running()
+    EXPECT_FALSE(book.is_running());
+    EXPECT_FALSE(norm.is_running());
+    EXPECT_FALSE(parser.is_running());
+    EXPECT_FALSE(sim.is_running());
+}
+
+// ── TEST 6: GracefulShutdownUnderLoad ──
+
+TEST_F(IntegrationTest, GracefulShutdownUnderLoad) {
+    TickRingBuffer16K sim_to_parser;
+    TickRingBuffer4K  parser_to_norm;
+    TickRingBuffer4K  norm_to_book;
+
+    FeedConfig config = FeedConfig::default_config();
+    config.tick_rate_hz = 0; // Prevent FeedSimulator from generating its own ticks to avoid SPSC UB
+    
+    FeedSimulator sim(config, sim_to_parser);
+    TickParser    parser(sim_to_parser, parser_to_norm);
+    Normalizer    norm(parser_to_norm, norm_to_book);
+    BookProcessor book(norm_to_book);
+
+    // start() all
+    sim.start();
+    parser.start();
+    norm.start();
+    book.start();
+
+    // Push 50000 ticks directly into the RingBuffer from a separate thread
+    auto spammer = std::async(std::launch::async, [&]() {
+        for (int i = 0; i < 50000; ++i) {
+            auto t = MarketTick::make("AAPL", 150.0, 1.0, 0);
+            while (!sim_to_parser.try_push(std::move(t))) {
+                if (!parser.is_running()) return; // Abort safely if the pipeline stops
+                std::this_thread::yield();
+                t = MarketTick::make("AAPL", 150.0, 1.0, 0);
+            }
+        }
+    });
+
+    // After 100ms, stop() all
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    auto shutdown = std::async(std::launch::async, [&]() {
+        book.stop();
+        norm.stop();
+        parser.stop();
+        sim.stop();
+    });
+
+    // Verify: no crash, no deadlock
+    auto status = shutdown.wait_for(std::chrono::seconds(2));
+    EXPECT_EQ(status, std::future_status::ready) << "Shutdown deadlocked!";
+    
+    spammer.wait();
+
+    // Stats are readable
+    EXPECT_NO_THROW({
+        auto s = norm.stats();
+        EXPECT_GE(s.ticks_forwarded, 0u);
+    });
 }

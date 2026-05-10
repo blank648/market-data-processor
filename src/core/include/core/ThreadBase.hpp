@@ -5,7 +5,6 @@
 
 #include <atomic>
 #include <cassert>
-#include <stdexcept>
 #include <string>
 #include <thread>
 
@@ -111,7 +110,6 @@ public:
     /// Exceptions thrown by `run()` are caught and silently swallowed to
     /// prevent `std::terminate`; the flag is still cleared on exit.
     ///
-    /// @throws std::runtime_error if the thread is already running.
     void start() {
         // [FIX 3 — TOCTOU Race on running_ in start()]
         // Guard uses joinable() NOT running_. joinable() is set synchronously
@@ -119,8 +117,9 @@ public:
         // running_ is set INSIDE the lambda and has a TOCTOU window: two
         // concurrent start() calls could both read running_=false and each
         // launch a thread, running run() concurrently on the same object.
+        // No-op contract: double-start returns without throwing.
         if (thread_.joinable()) {
-            throw std::runtime_error("ThreadBase[" + name_ + "]: already running");
+            return;
         }
 
         // [ARM MEMORY MODEL] release: pairs with the acquire load in
