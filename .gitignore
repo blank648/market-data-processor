@@ -35,3 +35,4 @@ tsan_output.txt
 # Keep baseline benchmarks
 !benchmarks/baseline_results.json
 !benchmarks/baseline_results.txt
+CLAUDE.md
