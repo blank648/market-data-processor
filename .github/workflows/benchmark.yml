@@ -11,9 +11,10 @@ jobs:
       
       - name: Install Dependencies
         run: |
-          brew install postgresql
-          echo "PostgreSQL_ROOT=$(brew --prefix postgresql)" >> $GITHUB_ENV
-          echo "$(brew --prefix postgresql)/bin" >> $GITHUB_PATH
+          brew install libpq
+          echo "PostgreSQL_ROOT=$(brew --prefix libpq)" >> $GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$(brew --prefix libpq)" >> $GITHUB_ENV
+          echo "$(brew --prefix libpq)/bin" >> $GITHUB_PATH
       
       - name: Build Release
         run: |
