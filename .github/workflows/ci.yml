@@ -14,7 +14,10 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Install Dependencies
-        run: brew install postgresql
+        run: |
+          brew install postgresql
+          echo "PostgreSQL_ROOT=$(brew --prefix postgresql)" >> $GITHUB_ENV
+          echo "$(brew --prefix postgresql)/bin" >> $GITHUB_PATH
       
       - name: Configure Release
         run: cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release
