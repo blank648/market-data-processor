@@ -27,10 +27,31 @@ unit_tests
 build-debug/
 build-release/
 build-tsan/
+build-asan/
+build-asan-new/
+build-cov/
+build_asan/
+.cache/
 *.json.user
 health_after.json
 health_ci.json
 tsan_output.txt
+
+# Logs and temp files
+*.log
+app_output.txt
+benchmark_results.json
+coverage.info
+full_results.xml
+health.json
+health_report.json
+tsan_results.xml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.claudeignore
 
 # Keep baseline benchmarks
 !benchmarks/baseline_results.json
