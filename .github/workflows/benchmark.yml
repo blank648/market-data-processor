@@ -9,6 +9,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Install Dependencies
+        run: brew install postgresql
+      
       - name: Build Release
         run: |
           cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release
