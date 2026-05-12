@@ -1,7 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/benchmark-subbuild/cmake_install.cmake"
-	],
-	"Parallel" : false
-}

@@ -1,2 +1,0 @@
-/usr/bin/ar qc libbook.a CMakeFiles/book.dir/src/OrderBook.cpp.o CMakeFiles/book.dir/src/BookProcessor.cpp.o
-/usr/bin/ranlib libbook.a

@@ -1,2 +1,0 @@
-/usr/bin/ar qc libprocessing.a CMakeFiles/processing.dir/src/TickParser.cpp.o CMakeFiles/processing.dir/src/Normalizer.cpp.o
-/usr/bin/ranlib libprocessing.a
