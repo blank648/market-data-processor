@@ -28,6 +28,8 @@ option(BUILD_BENCHMARKS "Build benchmark targets" ON)
 
 include(cmake/FetchDependencies.cmake)
 
+find_package(PostgreSQL REQUIRED)
+
 # ── Compile flags — UN FLAG PER GENERATOR EXPRESSION ─────────────────────────
 add_compile_options(
     -Wall

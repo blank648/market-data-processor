@@ -1,0 +1,22 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/cmake_install.cmake",
+		"/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-build/cmake_install.cmake",
+		"/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-build/googlemock/cmake_install.cmake",
+		"/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-build/googletest/cmake_install.cmake",
+		"/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/benchmark-build/cmake_install.cmake",
+		"/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/benchmark-build/src/cmake_install.cmake",
+		"/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/spdlog-build/cmake_install.cmake",
+		"/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/nlohmann_json-build/cmake_install.cmake",
+		"/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/src/core/cmake_install.cmake",
+		"/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/src/feed/cmake_install.cmake",
+		"/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/src/processing/cmake_install.cmake",
+		"/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/src/book/cmake_install.cmake",
+		"/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/src/strategy/cmake_install.cmake",
+		"/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/src/infra/cmake_install.cmake",
+		"/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/cmake_install.cmake",
+		"/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/benchmarks/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

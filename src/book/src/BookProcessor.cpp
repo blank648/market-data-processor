@@ -25,7 +25,10 @@ static constexpr double kMaxValidPrice = 1'000'000.0;
 // is a data race — document this in BookProcessor.hpp.
 
 BookProcessor::BookProcessor(TickRingBuffer4K& input)
-    : ThreadBase("BookProcessor"), input_(input) {}
+    : ThreadBase("BookProcessor"), input_(input), output_(nullptr) {}
+
+BookProcessor::BookProcessor(TickRingBuffer4K& input, TickRingBuffer4K& output)
+    : ThreadBase("BookProcessor"), input_(input), output_(&output) {}
 
 const OrderBook* BookProcessor::book(std::string_view symbol) const noexcept {
     auto it = books_.find(std::string{symbol});
@@ -72,6 +75,10 @@ void BookProcessor::run(StopToken st) {
         pushed = true;
         if (pushed) {
             ticks_processed_.fetch_add(1, std::memory_order_relaxed);
+            if (output_) {
+                // Best-effort push to downstream stage
+                output_->try_push(std::move(tick));
+            }
         }
     }
 
@@ -90,6 +97,9 @@ void BookProcessor::run(StopToken st) {
         it->second.apply(delta);
         log_->trace("Applied tick to book: {}", symbol);
         ticks_processed_.fetch_add(1, std::memory_order_relaxed);
+        if (output_) {
+            output_->try_push(std::move(tick));
+        }
     }
     
     log_->info("BookProcessor stopped");

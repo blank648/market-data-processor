@@ -1,0 +1,469 @@
+{
+  "tests": 77,
+  "name": "AllTests",
+  "testsuites": [
+    {
+      "name": "MarketTickTest",
+      "tests": 7,
+      "testsuite": [
+        {
+          "name": "SizeIs40Bytes",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/core_tests.cpp",
+          "line": 22
+        },
+        {
+          "name": "TrivialCopyability",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/core_tests.cpp",
+          "line": 26
+        },
+        {
+          "name": "MakePopulatesAllFields",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/core_tests.cpp",
+          "line": 31
+        },
+        {
+          "name": "TimestampIsMonotonicallyIncreasing",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/core_tests.cpp",
+          "line": 47
+        },
+        {
+          "name": "SymbolTruncatesAt8Chars",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/core_tests.cpp",
+          "line": 53
+        },
+        {
+          "name": "ToStringContainsPriceAndSymbol",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/core_tests.cpp",
+          "line": 59
+        },
+        {
+          "name": "EqualityOperator",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/core_tests.cpp",
+          "line": 67
+        }
+      ]
+    },
+    {
+      "name": "RingBufferTest",
+      "tests": 6,
+      "testsuite": [
+        {
+          "name": "EmptyOnConstruction",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/core_tests.cpp",
+          "line": 87
+        },
+        {
+          "name": "PushToEmptySucceeds",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/core_tests.cpp",
+          "line": 93
+        },
+        {
+          "name": "PopFromEmptyReturnsFalse",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/core_tests.cpp",
+          "line": 99
+        },
+        {
+          "name": "PushBeyondCapacityReturnsFalse",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/core_tests.cpp",
+          "line": 104
+        },
+        {
+          "name": "FIFOOrderPreserved",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/core_tests.cpp",
+          "line": 114
+        },
+        {
+          "name": "WrapAroundMaintainsIntegrity",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/core_tests.cpp",
+          "line": 130
+        }
+      ]
+    },
+    {
+      "name": "SPSCConcurrentTest",
+      "tests": 2,
+      "testsuite": [
+        {
+          "name": "NoDataLossUnderConcurrentLoad",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/core_tests.cpp",
+          "line": 157
+        },
+        {
+          "name": "ThroughputBaseline",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/core_tests.cpp",
+          "line": 194
+        }
+      ]
+    },
+    {
+      "name": "ThreadBaseTest",
+      "tests": 3,
+      "testsuite": [
+        {
+          "name": "WorkerStartsAndStops",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/core_tests.cpp",
+          "line": 248
+        },
+        {
+          "name": "ExplicitDestructorStopsThreadCleanly",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/core_tests.cpp",
+          "line": 269
+        },
+        {
+          "name": "DoubleStopIsIdempotent",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/core_tests.cpp",
+          "line": 279
+        }
+      ]
+    },
+    {
+      "name": "IntegrationTest",
+      "tests": 6,
+      "testsuite": [
+        {
+          "name": "FullPipelineProducesValidTicks",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/integration_test.cpp",
+          "line": 39
+        },
+        {
+          "name": "PipelineHandlesHighThroughputWithoutCrash",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/integration_test.cpp",
+          "line": 106
+        },
+        {
+          "name": "PipelineStopIsCleanWithRAII",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/integration_test.cpp",
+          "line": 163
+        },
+        {
+          "name": "BookProcessorReceivesTicks",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/integration_test.cpp",
+          "line": 208
+        },
+        {
+          "name": "FullPipelineSmoke",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/integration_test.cpp",
+          "line": 286
+        },
+        {
+          "name": "GracefulShutdownUnderLoad",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/integration_test.cpp",
+          "line": 338
+        }
+      ]
+    },
+    {
+      "name": "OrderBookTest",
+      "tests": 14,
+      "testsuite": [
+        {
+          "name": "EmptyBookBestBidAndAskReturnsZero",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/book_tests.cpp",
+          "line": 41
+        },
+        {
+          "name": "InsertSingleBidReturnsPrice",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/book_tests.cpp",
+          "line": 50
+        },
+        {
+          "name": "InsertSingleAskReturnsPrice",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/book_tests.cpp",
+          "line": 57
+        },
+        {
+          "name": "BestBidIsHighestBidPrice",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/book_tests.cpp",
+          "line": 64
+        },
+        {
+          "name": "BestAskIsLowestAskPrice",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/book_tests.cpp",
+          "line": 74
+        },
+        {
+          "name": "RemovePriceLevelOnZeroVolume",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/book_tests.cpp",
+          "line": 84
+        },
+        {
+          "name": "CrossedBookInsertingAskLessThanBestBidIsRejected",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/book_tests.cpp",
+          "line": 93
+        },
+        {
+          "name": "UpdateExistingPriceLevel",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/book_tests.cpp",
+          "line": 105
+        },
+        {
+          "name": "SnapshotContainsAllLevels",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/book_tests.cpp",
+          "line": 113
+        },
+        {
+          "name": "SnapshotSequenceMonotonicallyIncreases",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/book_tests.cpp",
+          "line": 133
+        },
+        {
+          "name": "ClearResetsAllState",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/book_tests.cpp",
+          "line": 143
+        },
+        {
+          "name": "UpdatesAppliedCounterIsAccurate",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/book_tests.cpp",
+          "line": 158
+        },
+        {
+          "name": "IndependentStateForDifferentSymbols",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/book_tests.cpp",
+          "line": 171
+        },
+        {
+          "name": "RandomOperationsMaintainConsistency",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/book_tests.cpp",
+          "line": 196
+        }
+      ]
+    },
+    {
+      "name": "BookProcessorTest",
+      "tests": 3,
+      "testsuite": [
+        {
+          "name": "ProcessorStartsAndStopsCleanly",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/book_tests.cpp",
+          "line": 231
+        },
+        {
+          "name": "ProcessesTicksAndUpdatesCorrectOrderBook",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/book_tests.cpp",
+          "line": 239
+        },
+        {
+          "name": "UnknownSymbolTickDoesNotCrash",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/book_tests.cpp",
+          "line": 273
+        }
+      ]
+    },
+    {
+      "name": "BookEdgeCasesTest",
+      "tests": 2,
+      "testsuite": [
+        {
+          "name": "CrossedBookIsRejected",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/book_tests.cpp",
+          "line": 295
+        },
+        {
+          "name": "ZeroVolumeOnNonExistentLevelIsNoOp",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/book_tests.cpp",
+          "line": 318
+        }
+      ]
+    },
+    {
+      "name": "MetricsCollectorTest",
+      "tests": 4,
+      "testsuite": [
+        {
+          "name": "SnapshotCapturesNonZeroCounts",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/infra_tests.cpp",
+          "line": 25
+        },
+        {
+          "name": "DropRateIsZeroOrPositive",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/infra_tests.cpp",
+          "line": 73
+        },
+        {
+          "name": "ToJsonProducesValidStructure",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/infra_tests.cpp",
+          "line": 106
+        },
+        {
+          "name": "ToLogDoesNotThrow",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/infra_tests.cpp",
+          "line": 145
+        }
+      ]
+    },
+    {
+      "name": "FeedConfigTest",
+      "tests": 4,
+      "testsuite": [
+        {
+          "name": "DefaultConfigIsValid",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/feed_tests.cpp",
+          "line": 22
+        },
+        {
+          "name": "InvalidConfigZeroTickRate",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/feed_tests.cpp",
+          "line": 29
+        },
+        {
+          "name": "InvalidConfigSymbolPriceMismatch",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/feed_tests.cpp",
+          "line": 35
+        },
+        {
+          "name": "InvalidConfigZeroVolatility",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/feed_tests.cpp",
+          "line": 41
+        }
+      ]
+    },
+    {
+      "name": "FeedSimulatorTest",
+      "tests": 7,
+      "testsuite": [
+        {
+          "name": "ConstructsWithoutThrowing",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/feed_tests.cpp",
+          "line": 56
+        },
+        {
+          "name": "StartSetsIsRunningTrueWithin50ms",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/feed_tests.cpp",
+          "line": 63
+        },
+        {
+          "name": "StopSetsIsRunningFalseWithin100ms",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/feed_tests.cpp",
+          "line": 75
+        },
+        {
+          "name": "DoubleStartIsNoOp",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/feed_tests.cpp",
+          "line": 87
+        },
+        {
+          "name": "DoubleStopIsNoOp",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/feed_tests.cpp",
+          "line": 101
+        },
+        {
+          "name": "DestructorWithRunningThreadDoesNotHang",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/feed_tests.cpp",
+          "line": 116
+        },
+        {
+          "name": "SourceNameReturnsNonEmptyStringView",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/feed_tests.cpp",
+          "line": 129
+        }
+      ]
+    },
+    {
+      "name": "TickParserTest",
+      "tests": 7,
+      "testsuite": [
+        {
+          "name": "ValidTickPassesThrough",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/processing_tests.cpp",
+          "line": 40
+        },
+        {
+          "name": "NegativePriceIsRejected",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/processing_tests.cpp",
+          "line": 56
+        },
+        {
+          "name": "ZeroVolumeIsRejected",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/processing_tests.cpp",
+          "line": 70
+        },
+        {
+          "name": "EmptySymbolIsRejected",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/processing_tests.cpp",
+          "line": 82
+        },
+        {
+          "name": "ParseMalformedInputIsRejected",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/processing_tests.cpp",
+          "line": 98
+        },
+        {
+          "name": "ParsePreservesSymbolStringExactly",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/processing_tests.cpp",
+          "line": 123
+        },
+        {
+          "name": "ParseExtremePriceValues",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/processing_tests.cpp",
+          "line": 139
+        }
+      ]
+    },
+    {
+      "name": "NormalizerTest",
+      "tests": 12,
+      "testsuite": [
+        {
+          "name": "ConstructsWithoutThrowing",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/processing_tests.cpp",
+          "line": 169
+        },
+        {
+          "name": "StartSetsIsRunningTrueWithin50ms",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/processing_tests.cpp",
+          "line": 176
+        },
+        {
+          "name": "StopSetsIsRunningFalseWithin100ms",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/processing_tests.cpp",
+          "line": 184
+        },
+        {
+          "name": "DoubleStartIsNoOp",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/processing_tests.cpp",
+          "line": 195
+        },
+        {
+          "name": "DoubleStopIsNoOp",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/processing_tests.cpp",
+          "line": 208
+        },
+        {
+          "name": "DestructorWithRunningThreadDoesNotHang",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/processing_tests.cpp",
+          "line": 222
+        },
+        {
+          "name": "UniqueTicsAreForwarded",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/processing_tests.cpp",
+          "line": 233
+        },
+        {
+          "name": "ExactDuplicateIsDropped",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/processing_tests.cpp",
+          "line": 250
+        },
+        {
+          "name": "OutOfOrderTimestampIsDropped",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/processing_tests.cpp",
+          "line": 266
+        },
+        {
+          "name": "DifferentSymbolsDontInterfereDeduplicate",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/processing_tests.cpp",
+          "line": 279
+        },
+        {
+          "name": "ConcurrentSafetyWith10000Ticks",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/processing_tests.cpp",
+          "line": 294
+        },
+        {
+          "name": "StatsReturnsConsistentSnapshotAfterStop",
+          "file": "\/Users\/adriandiaconescu\/CLionProjects\/market-data-processor\/tests\/processing_tests.cpp",
+          "line": 349
+        }
+      ]
+    }
+  ]
+}

@@ -12,6 +12,8 @@
 #include "book/BookProcessor.hpp"
 #include "feed/FeedSimulator.hpp"
 #include "feed/FeedConfig.hpp"
+#include "infra/Logger.hpp"
+#include <spdlog/spdlog.h>
 
 using namespace mdp;
 using namespace std::chrono_literals;
@@ -124,40 +126,73 @@ static void BM_RingBuffer_PushPop(benchmark::State& state) {
 BENCHMARK(BM_RingBuffer_PushPop)->Iterations(100000);
 
 // 6. BM_FullPipeline_Throughput — measure ticks/sec through FeedSim→Norm→Book pipeline
-static void BM_FullPipeline_Throughput(benchmark::State& state) {
-    TickRingBuffer16K sim_to_parser;
-    TickRingBuffer4K  parser_to_norm;
-    TickRingBuffer4K  norm_to_book;
-
-    FeedConfig config = FeedConfig::default_config();
-    config.tick_rate_hz = 0; // Disable automatic generation to isolate throughput measurement
+class FullPipelineFixture : public benchmark::Fixture {
+public:
+    std::unique_ptr<TickRingBuffer16K> sim_to_parser;
+    std::unique_ptr<TickRingBuffer4K>  parser_to_norm;
+    std::unique_ptr<TickRingBuffer4K>  norm_to_book;
     
-    FeedSimulator sim(config, sim_to_parser);
-    TickParser    parser(sim_to_parser, parser_to_norm);
-    Normalizer    norm(parser_to_norm, norm_to_book);
-    BookProcessor book(norm_to_book);
+    std::unique_ptr<FeedSimulator> sim;
+    std::unique_ptr<TickParser>    parser;
+    std::unique_ptr<Normalizer>    norm;
+    std::unique_ptr<BookProcessor> book;
 
-    book.start();
-    norm.start();
-    parser.start();
-    sim.start();
+    void SetUp(const ::benchmark::State& state) override {
+        // [FIX — Init once per test]
+        mdp::Logger::init("bench_full", spdlog::level::off);
+        
+        sim_to_parser = std::make_unique<TickRingBuffer16K>();
+        parser_to_norm = std::make_unique<TickRingBuffer4K>();
+        norm_to_book = std::make_unique<TickRingBuffer4K>();
+        
+        FeedConfig config = FeedConfig::default_config();
+        config.tick_rate_hz = 0; // Disable automatic generation to isolate throughput measurement
+        
+        sim = std::make_unique<FeedSimulator>(config, *sim_to_parser);
+        parser = std::make_unique<TickParser>(*sim_to_parser, *parser_to_norm);
+        norm = std::make_unique<Normalizer>(*parser_to_norm, *norm_to_book);
+        book = std::make_unique<BookProcessor>(*norm_to_book);
+        
+        book->start(); 
+        norm->start(); 
+        parser->start(); 
+        sim->start();
+    }
 
+    void TearDown(const ::benchmark::State& state) override {
+        // [FIX — Destructor Ordering]
+        if (sim) sim->stop();
+        if (parser) parser->stop();
+        if (norm) norm->stop();
+        if (book) book->stop();
+        
+        sim.reset();
+        parser.reset();
+        norm.reset();
+        book.reset();
+        
+        sim_to_parser.reset();
+        parser_to_norm.reset();
+        norm_to_book.reset();
+        
+        spdlog::shutdown();
+    }
+};
+
+BENCHMARK_DEFINE_F(FullPipelineFixture, BM_FullPipeline_Throughput)(benchmark::State& state) {
     int64_t ts = 1000;
     
     for (auto _ : state) {
         MarketTick t = MarketTick::make("AAPL", 150.0, 1.0, 0);
         t.timestamp_ns = ts++;
         
-        while (!sim_to_parser.try_push(std::move(t))) {
+        while (!sim_to_parser->try_push(std::move(t))) {
             std::this_thread::yield();
             t = MarketTick::make("AAPL", 150.0, 1.0, 0);
             t.timestamp_ns = ts;
         }
     }
-
-    sim.stop();
-    parser.stop();
-    norm.stop();
-    book.stop();
 }
-BENCHMARK(BM_FullPipeline_Throughput)->Iterations(100000);
+BENCHMARK_REGISTER_F(FullPipelineFixture, BM_FullPipeline_Throughput)->Iterations(100000);
+
+

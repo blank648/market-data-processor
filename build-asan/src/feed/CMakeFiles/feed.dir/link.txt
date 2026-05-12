@@ -1,0 +1,2 @@
+/usr/bin/ar qc libfeed.a CMakeFiles/feed.dir/src/FeedSimulator.cpp.o
+/usr/bin/ranlib libfeed.a

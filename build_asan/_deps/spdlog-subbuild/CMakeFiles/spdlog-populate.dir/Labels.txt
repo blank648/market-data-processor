@@ -1,0 +1,14 @@
+# Target labels
+ spdlog-populate
+# Source files and their labels
+/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/spdlog-subbuild/CMakeFiles/spdlog-populate
+/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/spdlog-subbuild/CMakeFiles/spdlog-populate.rule
+/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/spdlog-subbuild/CMakeFiles/spdlog-populate-complete.rule
+/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-build.rule
+/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-configure.rule
+/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-download.rule
+/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-install.rule
+/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-mkdir.rule
+/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-patch.rule
+/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-test.rule
+/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-update.rule

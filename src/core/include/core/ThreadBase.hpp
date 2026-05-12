@@ -19,7 +19,7 @@ public:
         // [ARM MEMORY MODEL] acquire: pairs with the release store in stop()
         // to guarantee the stop signal is visible on weakly-ordered CPUs
         // (e.g., Apple Silicon M-series) without delay.
-        return flag_ ? flag_->load(std::memory_order_acquire) : false;
+        return (flag_ != nullptr) ? flag_->load(std::memory_order_acquire) : false;
     }
 
 private:
@@ -85,12 +85,10 @@ public:
     /// Debug build means a subclass forgot to call `stop()`.
     virtual ~ThreadBase() {
         // [FIX 1 — Destructor Chain Use-After-Free]
-        // Calling stop() here would join the thread AFTER subclass members
-        // have already been destroyed, causing use-after-free if run() is
-        // still executing. The subclass must call stop() first.
-        // DIAGNOSTIC: if this fires, a subclass forgot ~SubClass() override { stop(); }
-        //assert(!thread_.joinable());  // NOLINT(misc-include-cleaner)
-        stop();
+        // Calling stop() here is too late: subclass members have already been
+        // destroyed. The worker thread MUST be joined by the subclass destructor
+        // (see SUBCLASS CONTRACT) to avoid use-after-free in run().
+        assert(!thread_.joinable()); // NOLINT(misc-include-cleaner)
     }
 
     // ─── Non-copyable, non-movable ────────────────────────────────────────
@@ -135,8 +133,13 @@ public:
             // RAII guard: always clear the flag when run() returns or throws.
             struct FinallyGuard {
                 std::atomic<bool>& flag;
-                // [ARM MEMORY MODEL] release: pairs with acquire in is_running().
+                explicit FinallyGuard(std::atomic<bool>& flag_ref) : flag(flag_ref) {}
                 ~FinallyGuard() { flag.store(false, std::memory_order_release); }
+                
+                FinallyGuard(const FinallyGuard&) = delete;
+                FinallyGuard& operator=(const FinallyGuard&) = delete;
+                FinallyGuard(FinallyGuard&&) = delete;
+                FinallyGuard& operator=(FinallyGuard&&) = delete;
             } guard{running_};
 
             try {
@@ -192,10 +195,10 @@ protected:
     /// @param stop_token Cancellation token; check periodically to exit cleanly.
     virtual void run(StopToken stop_token) = 0;
 
-    /// @brief The name supplied at construction; accessible to subclasses.
+private:
+    /// @brief The name supplied at construction.
     const std::string name_;
 
-private:
     std::thread       thread_;
     std::atomic<bool> running_{false};
     std::atomic<bool> stop_flag_{false};

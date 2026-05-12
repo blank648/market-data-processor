@@ -1,0 +1,586 @@
+Start testing: Apr 02 08:06 EEST
+----------------------------------------------------------
+1/21 Testing: MarketTickTest.SizeIs40Bytes
+1/21 Test: MarketTickTest.SizeIs40Bytes
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=MarketTickTest.SizeIs40Bytes" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"MarketTickTest.SizeIs40Bytes" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = MarketTickTest.SizeIs40Bytes
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from MarketTickTest
+[ RUN      ] MarketTickTest.SizeIs40Bytes
+[       OK ] MarketTickTest.SizeIs40Bytes (0 ms)
+[----------] 1 test from MarketTickTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"MarketTickTest.SizeIs40Bytes" end time: Apr 02 08:06 EEST
+"MarketTickTest.SizeIs40Bytes" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/21 Testing: MarketTickTest.TrivialCopyability
+2/21 Test: MarketTickTest.TrivialCopyability
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=MarketTickTest.TrivialCopyability" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"MarketTickTest.TrivialCopyability" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = MarketTickTest.TrivialCopyability
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from MarketTickTest
+[ RUN      ] MarketTickTest.TrivialCopyability
+[       OK ] MarketTickTest.TrivialCopyability (0 ms)
+[----------] 1 test from MarketTickTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"MarketTickTest.TrivialCopyability" end time: Apr 02 08:06 EEST
+"MarketTickTest.TrivialCopyability" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/21 Testing: MarketTickTest.MakePopulatesAllFields
+3/21 Test: MarketTickTest.MakePopulatesAllFields
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=MarketTickTest.MakePopulatesAllFields" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"MarketTickTest.MakePopulatesAllFields" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = MarketTickTest.MakePopulatesAllFields
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from MarketTickTest
+[ RUN      ] MarketTickTest.MakePopulatesAllFields
+[       OK ] MarketTickTest.MakePopulatesAllFields (0 ms)
+[----------] 1 test from MarketTickTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"MarketTickTest.MakePopulatesAllFields" end time: Apr 02 08:06 EEST
+"MarketTickTest.MakePopulatesAllFields" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/21 Testing: MarketTickTest.TimestampIsMonotonicallyIncreasing
+4/21 Test: MarketTickTest.TimestampIsMonotonicallyIncreasing
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=MarketTickTest.TimestampIsMonotonicallyIncreasing" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"MarketTickTest.TimestampIsMonotonicallyIncreasing" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = MarketTickTest.TimestampIsMonotonicallyIncreasing
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from MarketTickTest
+[ RUN      ] MarketTickTest.TimestampIsMonotonicallyIncreasing
+[       OK ] MarketTickTest.TimestampIsMonotonicallyIncreasing (0 ms)
+[----------] 1 test from MarketTickTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"MarketTickTest.TimestampIsMonotonicallyIncreasing" end time: Apr 02 08:06 EEST
+"MarketTickTest.TimestampIsMonotonicallyIncreasing" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/21 Testing: MarketTickTest.SymbolTruncatesAt8Chars
+5/21 Test: MarketTickTest.SymbolTruncatesAt8Chars
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=MarketTickTest.SymbolTruncatesAt8Chars" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"MarketTickTest.SymbolTruncatesAt8Chars" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = MarketTickTest.SymbolTruncatesAt8Chars
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from MarketTickTest
+[ RUN      ] MarketTickTest.SymbolTruncatesAt8Chars
+[       OK ] MarketTickTest.SymbolTruncatesAt8Chars (0 ms)
+[----------] 1 test from MarketTickTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"MarketTickTest.SymbolTruncatesAt8Chars" end time: Apr 02 08:06 EEST
+"MarketTickTest.SymbolTruncatesAt8Chars" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/21 Testing: MarketTickTest.ToStringContainsPriceAndSymbol
+6/21 Test: MarketTickTest.ToStringContainsPriceAndSymbol
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=MarketTickTest.ToStringContainsPriceAndSymbol" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"MarketTickTest.ToStringContainsPriceAndSymbol" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = MarketTickTest.ToStringContainsPriceAndSymbol
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from MarketTickTest
+[ RUN      ] MarketTickTest.ToStringContainsPriceAndSymbol
+[       OK ] MarketTickTest.ToStringContainsPriceAndSymbol (0 ms)
+[----------] 1 test from MarketTickTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"MarketTickTest.ToStringContainsPriceAndSymbol" end time: Apr 02 08:06 EEST
+"MarketTickTest.ToStringContainsPriceAndSymbol" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/21 Testing: MarketTickTest.EqualityOperator
+7/21 Test: MarketTickTest.EqualityOperator
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=MarketTickTest.EqualityOperator" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"MarketTickTest.EqualityOperator" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = MarketTickTest.EqualityOperator
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from MarketTickTest
+[ RUN      ] MarketTickTest.EqualityOperator
+[       OK ] MarketTickTest.EqualityOperator (0 ms)
+[----------] 1 test from MarketTickTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"MarketTickTest.EqualityOperator" end time: Apr 02 08:06 EEST
+"MarketTickTest.EqualityOperator" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/21 Testing: RingBufferTest.EmptyOnConstruction
+8/21 Test: RingBufferTest.EmptyOnConstruction
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=RingBufferTest.EmptyOnConstruction" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"RingBufferTest.EmptyOnConstruction" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = RingBufferTest.EmptyOnConstruction
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RingBufferTest
+[ RUN      ] RingBufferTest.EmptyOnConstruction
+[       OK ] RingBufferTest.EmptyOnConstruction (0 ms)
+[----------] 1 test from RingBufferTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"RingBufferTest.EmptyOnConstruction" end time: Apr 02 08:06 EEST
+"RingBufferTest.EmptyOnConstruction" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/21 Testing: RingBufferTest.PushToEmptySucceeds
+9/21 Test: RingBufferTest.PushToEmptySucceeds
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=RingBufferTest.PushToEmptySucceeds" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"RingBufferTest.PushToEmptySucceeds" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = RingBufferTest.PushToEmptySucceeds
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RingBufferTest
+[ RUN      ] RingBufferTest.PushToEmptySucceeds
+[       OK ] RingBufferTest.PushToEmptySucceeds (0 ms)
+[----------] 1 test from RingBufferTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"RingBufferTest.PushToEmptySucceeds" end time: Apr 02 08:06 EEST
+"RingBufferTest.PushToEmptySucceeds" time elapsed: 00:00:00
+----------------------------------------------------------
+
+10/21 Testing: RingBufferTest.PopFromEmptyReturnsFalse
+10/21 Test: RingBufferTest.PopFromEmptyReturnsFalse
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=RingBufferTest.PopFromEmptyReturnsFalse" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"RingBufferTest.PopFromEmptyReturnsFalse" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = RingBufferTest.PopFromEmptyReturnsFalse
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RingBufferTest
+[ RUN      ] RingBufferTest.PopFromEmptyReturnsFalse
+[       OK ] RingBufferTest.PopFromEmptyReturnsFalse (0 ms)
+[----------] 1 test from RingBufferTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"RingBufferTest.PopFromEmptyReturnsFalse" end time: Apr 02 08:06 EEST
+"RingBufferTest.PopFromEmptyReturnsFalse" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/21 Testing: RingBufferTest.PushBeyondCapacityReturnsFalse
+11/21 Test: RingBufferTest.PushBeyondCapacityReturnsFalse
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=RingBufferTest.PushBeyondCapacityReturnsFalse" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"RingBufferTest.PushBeyondCapacityReturnsFalse" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = RingBufferTest.PushBeyondCapacityReturnsFalse
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RingBufferTest
+[ RUN      ] RingBufferTest.PushBeyondCapacityReturnsFalse
+[       OK ] RingBufferTest.PushBeyondCapacityReturnsFalse (0 ms)
+[----------] 1 test from RingBufferTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"RingBufferTest.PushBeyondCapacityReturnsFalse" end time: Apr 02 08:06 EEST
+"RingBufferTest.PushBeyondCapacityReturnsFalse" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/21 Testing: RingBufferTest.FIFOOrderPreserved
+12/21 Test: RingBufferTest.FIFOOrderPreserved
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=RingBufferTest.FIFOOrderPreserved" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"RingBufferTest.FIFOOrderPreserved" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = RingBufferTest.FIFOOrderPreserved
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RingBufferTest
+[ RUN      ] RingBufferTest.FIFOOrderPreserved
+[       OK ] RingBufferTest.FIFOOrderPreserved (0 ms)
+[----------] 1 test from RingBufferTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"RingBufferTest.FIFOOrderPreserved" end time: Apr 02 08:06 EEST
+"RingBufferTest.FIFOOrderPreserved" time elapsed: 00:00:00
+----------------------------------------------------------
+
+13/21 Testing: RingBufferTest.WrapAroundMaintainsIntegrity
+13/21 Test: RingBufferTest.WrapAroundMaintainsIntegrity
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=RingBufferTest.WrapAroundMaintainsIntegrity" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"RingBufferTest.WrapAroundMaintainsIntegrity" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = RingBufferTest.WrapAroundMaintainsIntegrity
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RingBufferTest
+[ RUN      ] RingBufferTest.WrapAroundMaintainsIntegrity
+[       OK ] RingBufferTest.WrapAroundMaintainsIntegrity (0 ms)
+[----------] 1 test from RingBufferTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"RingBufferTest.WrapAroundMaintainsIntegrity" end time: Apr 02 08:06 EEST
+"RingBufferTest.WrapAroundMaintainsIntegrity" time elapsed: 00:00:00
+----------------------------------------------------------
+
+14/21 Testing: SPSCConcurrentTest.NoDataLossUnderConcurrentLoad
+14/21 Test: SPSCConcurrentTest.NoDataLossUnderConcurrentLoad
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=SPSCConcurrentTest.NoDataLossUnderConcurrentLoad" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"SPSCConcurrentTest.NoDataLossUnderConcurrentLoad" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = SPSCConcurrentTest.NoDataLossUnderConcurrentLoad
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from SPSCConcurrentTest
+[ RUN      ] SPSCConcurrentTest.NoDataLossUnderConcurrentLoad
+[       OK ] SPSCConcurrentTest.NoDataLossUnderConcurrentLoad (28 ms)
+[----------] 1 test from SPSCConcurrentTest (28 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (28 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"SPSCConcurrentTest.NoDataLossUnderConcurrentLoad" end time: Apr 02 08:06 EEST
+"SPSCConcurrentTest.NoDataLossUnderConcurrentLoad" time elapsed: 00:00:00
+----------------------------------------------------------
+
+15/21 Testing: SPSCConcurrentTest.ThroughputBaseline
+15/21 Test: SPSCConcurrentTest.ThroughputBaseline
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=SPSCConcurrentTest.ThroughputBaseline" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"SPSCConcurrentTest.ThroughputBaseline" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = SPSCConcurrentTest.ThroughputBaseline
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from SPSCConcurrentTest
+[ RUN      ] SPSCConcurrentTest.ThroughputBaseline
+
+[  INFO ] /Users/adriandiaconescu/CLionProjects/market-data-processor/tests/core_tests.cpp:227:: Throughput Baseline: 5.48284e+06 msgs/sec
+[       OK ] SPSCConcurrentTest.ThroughputBaseline (18 ms)
+[----------] 1 test from SPSCConcurrentTest (18 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (18 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"SPSCConcurrentTest.ThroughputBaseline" end time: Apr 02 08:06 EEST
+"SPSCConcurrentTest.ThroughputBaseline" time elapsed: 00:00:00
+----------------------------------------------------------
+
+16/21 Testing: ThreadBaseTest.WorkerStartsAndStops
+16/21 Test: ThreadBaseTest.WorkerStartsAndStops
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=ThreadBaseTest.WorkerStartsAndStops" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"ThreadBaseTest.WorkerStartsAndStops" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = ThreadBaseTest.WorkerStartsAndStops
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ThreadBaseTest
+[ RUN      ] ThreadBaseTest.WorkerStartsAndStops
+[       OK ] ThreadBaseTest.WorkerStartsAndStops (15 ms)
+[----------] 1 test from ThreadBaseTest (15 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (15 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"ThreadBaseTest.WorkerStartsAndStops" end time: Apr 02 08:06 EEST
+"ThreadBaseTest.WorkerStartsAndStops" time elapsed: 00:00:00
+----------------------------------------------------------
+
+17/21 Testing: ThreadBaseTest.RAIIStopsOnDestruction
+17/21 Test: ThreadBaseTest.RAIIStopsOnDestruction
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=ThreadBaseTest.RAIIStopsOnDestruction" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"ThreadBaseTest.RAIIStopsOnDestruction" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = ThreadBaseTest.RAIIStopsOnDestruction
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ThreadBaseTest
+[ RUN      ] ThreadBaseTest.RAIIStopsOnDestruction
+[       OK ] ThreadBaseTest.RAIIStopsOnDestruction (6 ms)
+[----------] 1 test from ThreadBaseTest (6 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (6 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"ThreadBaseTest.RAIIStopsOnDestruction" end time: Apr 02 08:06 EEST
+"ThreadBaseTest.RAIIStopsOnDestruction" time elapsed: 00:00:00
+----------------------------------------------------------
+
+18/21 Testing: ThreadBaseTest.DoubleStopIsIdempotent
+18/21 Test: ThreadBaseTest.DoubleStopIsIdempotent
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=ThreadBaseTest.DoubleStopIsIdempotent" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"ThreadBaseTest.DoubleStopIsIdempotent" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = ThreadBaseTest.DoubleStopIsIdempotent
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ThreadBaseTest
+[ RUN      ] ThreadBaseTest.DoubleStopIsIdempotent
+[       OK ] ThreadBaseTest.DoubleStopIsIdempotent (2 ms)
+[----------] 1 test from ThreadBaseTest (2 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (2 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"ThreadBaseTest.DoubleStopIsIdempotent" end time: Apr 02 08:06 EEST
+"ThreadBaseTest.DoubleStopIsIdempotent" time elapsed: 00:00:00
+----------------------------------------------------------
+
+19/21 Testing: IntegrationTest.FullPipelineProducesValidTicks
+19/21 Test: IntegrationTest.FullPipelineProducesValidTicks
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=IntegrationTest.FullPipelineProducesValidTicks" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"IntegrationTest.FullPipelineProducesValidTicks" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = IntegrationTest.FullPipelineProducesValidTicks
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from IntegrationTest
+[ RUN      ] IntegrationTest.FullPipelineProducesValidTicks
+[       OK ] IntegrationTest.FullPipelineProducesValidTicks (227 ms)
+[----------] 1 test from IntegrationTest (227 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (227 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.26 sec
+----------------------------------------------------------
+Test Passed.
+"IntegrationTest.FullPipelineProducesValidTicks" end time: Apr 02 08:06 EEST
+"IntegrationTest.FullPipelineProducesValidTicks" time elapsed: 00:00:00
+----------------------------------------------------------
+
+20/21 Testing: IntegrationTest.PipelineHandlesHighThroughputWithoutCrash
+20/21 Test: IntegrationTest.PipelineHandlesHighThroughputWithoutCrash
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=IntegrationTest.PipelineHandlesHighThroughputWithoutCrash" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"IntegrationTest.PipelineHandlesHighThroughputWithoutCrash" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = IntegrationTest.PipelineHandlesHighThroughputWithoutCrash
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from IntegrationTest
+[ RUN      ] IntegrationTest.PipelineHandlesHighThroughputWithoutCrash
+
+[  INFO ] /Users/adriandiaconescu/CLionProjects/market-data-processor/tests/integration_test.cpp:114:: Sim published:   24578
+
+[  INFO ] /Users/adriandiaconescu/CLionProjects/market-data-processor/tests/integration_test.cpp:115:: Sim dropped:     6925
+
+[  INFO ] /Users/adriandiaconescu/CLionProjects/market-data-processor/tests/integration_test.cpp:116:: Parser accepted: 8194
+
+[  INFO ] /Users/adriandiaconescu/CLionProjects/market-data-processor/tests/integration_test.cpp:117:: Parser rejected: 0
+
+[  INFO ] /Users/adriandiaconescu/CLionProjects/market-data-processor/tests/integration_test.cpp:118:: Norm forwarded:  4097
+
+[  INFO ] /Users/adriandiaconescu/CLionProjects/market-data-processor/tests/integration_test.cpp:119:: Norm deduped:    0
+
+[  INFO ] /Users/adriandiaconescu/CLionProjects/market-data-processor/tests/integration_test.cpp:120:: Norm reordered:  0
+[       OK ] IntegrationTest.PipelineHandlesHighThroughputWithoutCrash (154 ms)
+[----------] 1 test from IntegrationTest (154 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (154 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.19 sec
+----------------------------------------------------------
+Test Passed.
+"IntegrationTest.PipelineHandlesHighThroughputWithoutCrash" end time: Apr 02 08:06 EEST
+"IntegrationTest.PipelineHandlesHighThroughputWithoutCrash" time elapsed: 00:00:00
+----------------------------------------------------------
+
+21/21 Testing: IntegrationTest.PipelineStopIsCleanWithRAII
+21/21 Test: IntegrationTest.PipelineStopIsCleanWithRAII
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests/unit_tests" "--gtest_filter=IntegrationTest.PipelineStopIsCleanWithRAII" "--gtest_also_run_disabled_tests"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/tests
+"IntegrationTest.PipelineStopIsCleanWithRAII" start time: Apr 02 08:06 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/adriandiaconescu/CLionProjects/market-data-processor/build_asan/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = IntegrationTest.PipelineStopIsCleanWithRAII
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from IntegrationTest
+[ RUN      ] IntegrationTest.PipelineStopIsCleanWithRAII
+[       OK ] IntegrationTest.PipelineStopIsCleanWithRAII (33 ms)
+[----------] 1 test from IntegrationTest (33 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (33 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.07 sec
+----------------------------------------------------------
+Test Passed.
+"IntegrationTest.PipelineStopIsCleanWithRAII" end time: Apr 02 08:06 EEST
+"IntegrationTest.PipelineStopIsCleanWithRAII" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Apr 02 08:06 EEST

@@ -1,0 +1,11 @@
+build/
+cmake-build-debug/
+cmake-build-release/
+.cmake/
+*.o
+*.a
+*.so
+CMakeFiles/
+Testing/
+vcpkg_installed/
+*.log

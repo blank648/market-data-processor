@@ -1,0 +1,62 @@
+Start testing: Apr 22 17:03 EEST
+----------------------------------------------------------
+1/37 Testing: MarketTickTest.SizeIs40Bytes
+1/37 Test: MarketTickTest.SizeIs40Bytes
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build-asan/tests/unit_tests" "--gtest_filter=MarketTickTest.SizeIs40Bytes"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build-asan/tests
+"MarketTickTest.SizeIs40Bytes" start time: Apr 22 17:03 EEST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =  30.02 sec
+----------------------------------------------------------
+Test Failed.
+"MarketTickTest.SizeIs40Bytes" end time: Apr 22 17:04 EEST
+"MarketTickTest.SizeIs40Bytes" time elapsed: 00:00:30
+----------------------------------------------------------
+
+2/37 Testing: MarketTickTest.TrivialCopyability
+2/37 Test: MarketTickTest.TrivialCopyability
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build-asan/tests/unit_tests" "--gtest_filter=MarketTickTest.TrivialCopyability"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build-asan/tests
+"MarketTickTest.TrivialCopyability" start time: Apr 22 17:04 EEST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =  30.02 sec
+----------------------------------------------------------
+Test Failed.
+"MarketTickTest.TrivialCopyability" end time: Apr 22 17:04 EEST
+"MarketTickTest.TrivialCopyability" time elapsed: 00:00:30
+----------------------------------------------------------
+
+3/37 Testing: MarketTickTest.MakePopulatesAllFields
+3/37 Test: MarketTickTest.MakePopulatesAllFields
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build-asan/tests/unit_tests" "--gtest_filter=MarketTickTest.MakePopulatesAllFields"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build-asan/tests
+"MarketTickTest.MakePopulatesAllFields" start time: Apr 22 17:04 EEST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =  30.02 sec
+----------------------------------------------------------
+Test Failed.
+"MarketTickTest.MakePopulatesAllFields" end time: Apr 22 17:05 EEST
+"MarketTickTest.MakePopulatesAllFields" time elapsed: 00:00:30
+----------------------------------------------------------
+
+4/37 Testing: MarketTickTest.TimestampIsMonotonicallyIncreasing
+4/37 Test: MarketTickTest.TimestampIsMonotonicallyIncreasing
+Command: "/Users/adriandiaconescu/CLionProjects/market-data-processor/build-asan/tests/unit_tests" "--gtest_filter=MarketTickTest.TimestampIsMonotonicallyIncreasing"
+Directory: /Users/adriandiaconescu/CLionProjects/market-data-processor/build-asan/tests
+"MarketTickTest.TimestampIsMonotonicallyIncreasing" start time: Apr 22 17:05 EEST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =  30.02 sec
+----------------------------------------------------------
+Test Failed.
+"MarketTickTest.TimestampIsMonotonicallyIncreasing" end time: Apr 22 17:05 EEST
+"MarketTickTest.TimestampIsMonotonicallyIncreasing" time elapsed: 00:00:30
+----------------------------------------------------------
+

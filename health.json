@@ -1,0 +1,25 @@
+{
+  "book": {
+    "books_active": 3,
+    "ticks_processed": 15009
+  },
+  "derived": {
+    "feed_drop_rate": 0.0,
+    "norm_dedup_rate": 0.0,
+    "parser_reject_rate": 0.0
+  },
+  "feed": {
+    "ticks_dropped": 0,
+    "ticks_published": 15009
+  },
+  "normalizer": {
+    "ticks_deduplicated": 0,
+    "ticks_forwarded": 15009,
+    "ticks_reordered": 0
+  },
+  "parser": {
+    "ticks_processed": 15009,
+    "ticks_rejected": 0
+  },
+  "snapshot_time_ns": 343749975358875
+}

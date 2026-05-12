@@ -21,38 +21,58 @@ namespace mdp {
 class Logger {
 public:
     // Initialize the global logger instance.
-    // Thread safety: spdlog::stdout_color_mt is multi-threaded safe.
     static void init(std::string_view app_name, spdlog::level::level_enum level = spdlog::level::info) {
-        auto logger = spdlog::stdout_color_mt(std::string(app_name));
-        logger->set_level(level);
-        logger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%n] [%^%l%$] [thread %t] %v");
-        spdlog::set_default_logger(logger);
-        spdlog::set_level(level);
+        // [SAFETY] Leak-on-exit pattern: ensures the logger object outlives all other statics.
+        // This prevents segfaults during static destruction.
+        static spdlog::logger* leaked_logger = nullptr;
+
+        if (!leaked_logger) {
+            try {
+                auto logger = spdlog::stdout_color_mt(std::string(app_name));
+                // Intentional leak of the shared_ptr to keep the logger alive forever
+                auto* persistent = new std::shared_ptr<spdlog::logger>(logger);
+                leaked_logger = persistent->get();
+            } catch (const spdlog::spdlog_ex&) {
+                auto existing = spdlog::get(std::string(app_name));
+                if (existing) {
+                    static auto* persistent = new std::shared_ptr<spdlog::logger>(existing);
+                    leaked_logger = persistent->get();
+                }
+            }
+        }
+
+        if (leaked_logger) {
+            // Re-register as default in case spdlog::shutdown() was called previously
+            spdlog::set_default_logger(std::shared_ptr<spdlog::logger>(leaked_logger, [](spdlog::logger*){}));
+            leaked_logger->set_level(level);
+            leaked_logger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%n] [%^%l%$] [thread %t] %v");
+            spdlog::set_level(level);
+        }
     }
 
     // Get a component-scoped named logger.
     static std::shared_ptr<spdlog::logger> get(std::string_view name) {
-        auto logger = spdlog::get(std::string(name));
-        if (!logger) {
+        try {
+            auto logger = spdlog::get(std::string(name));
+            if (logger) return logger;
+
             auto default_logger = spdlog::default_logger();
             if (default_logger) {
                 logger = default_logger->clone(std::string(name));
-                // Inherit level from the default logger directly — avoids
-                // spdlog::get_level() which dereferences default_logger_raw()
-                // and crashes if no default logger has been registered yet.
                 logger->set_level(default_logger->level());
-            } else {
-                // Use raw sink to avoid spdlog::stdout_color_mt(), which both
-                // creates AND auto-registers — causing spdlog::register_logger()
-                // below to throw if the name was re-used after spdlog::shutdown().
-                auto sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-                logger = std::make_shared<spdlog::logger>(std::string(name), sink);
-                logger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%n] [%^%l%$] [thread %t] %v");
-                logger->set_level(spdlog::level::info);
+                spdlog::register_logger(logger);
+                return logger;
             }
-            spdlog::register_logger(logger);
+        } catch (...) {
+            // If spdlog is already partially destroyed, return a dummy or null
         }
-        return logger;
+        
+        // Fallback: Create an unregistered logger to avoid registry issues during teardown
+        auto sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+        auto fallback = std::make_shared<spdlog::logger>(std::string(name), sink);
+        fallback->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%n] [%^%l%$] [thread %t] %v");
+        fallback->set_level(spdlog::level::info);
+        return fallback;
     }
 
     // Shutdown spdlog (flush queues, drop loggers)

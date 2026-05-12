@@ -26,6 +26,7 @@ class BookProcessor final : public ThreadBase {
     /// @brief Constructs the processor, linking it to an input ring buffer.
     /// @param input The ring buffer containing normalized MarketTick data.
     explicit BookProcessor(TickRingBuffer4K& input);
+    BookProcessor(TickRingBuffer4K& input, TickRingBuffer4K& output);
 
     /// @brief Destructor. Stops the worker thread.
     ~BookProcessor() override {
@@ -54,6 +55,7 @@ class BookProcessor final : public ThreadBase {
 
    private:
     TickRingBuffer4K& input_;
+    TickRingBuffer4K* output_{nullptr};
     std::unordered_map<std::string, OrderBook> books_;
     std::atomic<uint64_t> ticks_processed_{0};
 

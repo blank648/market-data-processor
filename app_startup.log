@@ -1,0 +1,183 @@
+Using launch settings from ../MarketDashboard/src/MarketDashboard.Web/Properties/launchSettings.json...
+Building...
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10401]
+      An 'IServiceProvider' was created for internal use by Entity Framework.
+dbug: Microsoft.EntityFrameworkCore.Model[10601]
+      The index {'UserId'} was not created on entity type 'IdentityUserRole<string>' as the properties are already covered by the index {'UserId', 'RoleId'}.
+dbug: Microsoft.EntityFrameworkCore.Model[10601]
+      The index {'UserId'} was not created on entity type 'IdentityUserToken<string>' as the properties are already covered by the index {'UserId', 'LoginProvider', 'Name'}.
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10403]
+      Entity Framework Core 8.0.0 initialized 'AppDbContext' using provider 'Npgsql.EntityFrameworkCore.PostgreSQL:8.0.0+2539d1f4bd0d429cbae20336d531d14938a54297' with options: None
+dbug: Microsoft.EntityFrameworkCore.Query[10111]
+      Compiling query expression: 
+      'DbSet<IdentityRole>()
+          .FirstOrDefault(r => r.NormalizedName == __normalizedName_0)'
+dbug: Microsoft.EntityFrameworkCore.Query[10107]
+      Generated query execution expression: 
+      'queryContext => ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync<IdentityRole>(
+          asyncEnumerable: new SingleQueryingEnumerable<IdentityRole>(
+              (RelationalQueryContext)queryContext, 
+              RelationalCommandCache.QueryExpression(
+                  Projection Mapping:
+                      EmptyProjectionMember -> Dictionary<IProperty, int> { [Property: IdentityRole.Id (string) Required PK AfterSave:Throw, 0], [Property: IdentityRole.ConcurrencyStamp (string) Concurrency, 1], [Property: IdentityRole.Name (string) MaxLength(256), 2], [Property: IdentityRole.NormalizedName (string) Index MaxLength(256), 3] }
+                  SELECT TOP(1) a.Id, a.ConcurrencyStamp, a.Name, a.NormalizedName
+                  FROM AspNetRoles AS a
+                  WHERE a.NormalizedName == @__normalizedName_0), 
+              null, 
+              Func<QueryContext, DbDataReader, ResultContext, SingleQueryResultCoordinator, IdentityRole>, 
+              MarketDashboard.Infrastructure.Data.AppDbContext, 
+              False, 
+              False, 
+              True
+          ), 
+          cancellationToken: queryContext.CancellationToken)'
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (9ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'marketdashboard' on server 'tcp://localhost:5433'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'marketdashboard' on server 'tcp://localhost:5433'.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (21ms) [Parameters=[@__normalizedName_0='?'], CommandType='Text', CommandTimeout='30']
+      SELECT a."Id", a."ConcurrencyStamp", a."Name", a."NormalizedName"
+      FROM "AspNetRoles" AS a
+      WHERE a."NormalizedName" = @__normalizedName_0
+      LIMIT 1
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10806]
+      Context 'AppDbContext' started tracking 'IdentityRole' entity. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'marketdashboard' on server 'tcp://localhost:5433'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'marketdashboard' on server 'tcp://localhost:5433' (1ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'marketdashboard' on server 'tcp://localhost:5433'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'marketdashboard' on server 'tcp://localhost:5433'.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__normalizedName_0='?'], CommandType='Text', CommandTimeout='30']
+      SELECT a."Id", a."ConcurrencyStamp", a."Name", a."NormalizedName"
+      FROM "AspNetRoles" AS a
+      WHERE a."NormalizedName" = @__normalizedName_0
+      LIMIT 1
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10806]
+      Context 'AppDbContext' started tracking 'IdentityRole' entity. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'marketdashboard' on server 'tcp://localhost:5433'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'marketdashboard' on server 'tcp://localhost:5433' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10407]
+      'AppDbContext' disposed.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20007]
+      Disposing connection to database 'marketdashboard' on server 'tcp://localhost:5433'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20008]
+      Disposed connection to database 'marketdashboard' on server 'tcp://localhost:5433' (0ms).
+info: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[62]
+      User profile is available. Using '/Users/adriandiaconescu/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+dbug: Microsoft.Extensions.Hosting.Internal.Host[1]
+      Hosting starting
+info: MarketDashboard.Infrastructure.Workers.MarketDataPollingWorker[0]
+      MarketDataPollingWorker started. Polling interval: 00:01:00
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10403]
+      Entity Framework Core 8.0.0 initialized 'AppDbContext' using provider 'Npgsql.EntityFrameworkCore.PostgreSQL:8.0.0+2539d1f4bd0d429cbae20336d531d14938a54297' with options: None
+dbug: Microsoft.EntityFrameworkCore.Query[10111]
+      Compiling query expression: 
+      'DbSet<Symbol>()
+          .Where(s => s.IsActive)
+          .Select(s => s.Ticker)'
+dbug: Microsoft.EntityFrameworkCore.Query[10107]
+      Generated query execution expression: 
+      'queryContext => new SingleQueryingEnumerable<string>(
+          (RelationalQueryContext)queryContext, 
+          RelationalCommandCache.QueryExpression(
+              Projection Mapping:
+                  EmptyProjectionMember -> 0
+              SELECT s.Ticker
+              FROM Symbols AS s
+              WHERE s.IsActive), 
+          null, 
+          Func<QueryContext, DbDataReader, ResultContext, SingleQueryResultCoordinator, string>, 
+          MarketDashboard.Infrastructure.Data.AppDbContext, 
+          False, 
+          False, 
+          True
+      )'
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'marketdashboard' on server 'tcp://localhost:5433'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'marketdashboard' on server 'tcp://localhost:5433'.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT s."Ticker"
+      FROM "Symbols" AS s
+      WHERE s."IsActive"
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'marketdashboard' on server 'tcp://localhost:5433'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'marketdashboard' on server 'tcp://localhost:5433' (0ms).
+warn: MarketDashboard.Infrastructure.Workers.MarketDataPollingWorker[0]
+      No active symbols in DB, using fallback symbols
+info: MarketDashboard.Infrastructure.Workers.MarketDataPollingWorker[0]
+      Polling 2 symbols
+info: System.Net.Http.HttpClient.AlphaVantage.LogicalHandler[100]
+      Start processing HTTP request GET https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=AAPL&apikey=demo
+info: System.Net.Http.HttpClient.AlphaVantage.ClientHandler[100]
+      Sending HTTP request GET https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=AAPL&apikey=demo
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5005
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /Users/adriandiaconescu/CLionProjects/MarketDashboard/src/MarketDashboard.Web
+dbug: Microsoft.Extensions.Hosting.Internal.Host[2]
+      Hosting started
+info: System.Net.Http.HttpClient.AlphaVantage.ClientHandler[101]
+      Received HTTP response headers after 475.0938ms - 200
+info: System.Net.Http.HttpClient.AlphaVantage.LogicalHandler[101]
+      End processing HTTP request after 482.1043ms - 200
+warn: MarketDashboard.Infrastructure.DataSources.AlphaVantageDataSource[0]
+      Alpha Vantage rate limit reached: The **demo** API key is for demo purposes only. Please claim your free API key at (https://www.alphavantage.co/support/#api-key) to explore our full API offerings. It takes fewer than 20 seconds.
+warn: MarketDashboard.Infrastructure.Workers.MarketDataPollingWorker[0]
+      No data returned for AAPL
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+dbug: Microsoft.Extensions.Hosting.Internal.Host[3]
+      Hosting stopping
+fail: MarketDashboard.Infrastructure.DataSources.AlphaVantageDataSource[0]
+      Failed to fetch price for IBM: A task was canceled.
+      System.Threading.Tasks.TaskCanceledException: A task was canceled.
+         at MarketDashboard.Infrastructure.DataSources.AlphaVantageDataSource.ThrottleAsync(CancellationToken ct) in /Users/adriandiaconescu/CLionProjects/MarketDashboard/src/MarketDashboard.Infrastructure/DataSources/AlphaVantageDataSource.cs:line 158
+         at MarketDashboard.Infrastructure.DataSources.AlphaVantageDataSource.GetLatestPriceAsync(String symbol, CancellationToken ct) in /Users/adriandiaconescu/CLionProjects/MarketDashboard/src/MarketDashboard.Infrastructure/DataSources/AlphaVantageDataSource.cs:line 27
+warn: MarketDashboard.Infrastructure.Workers.MarketDataPollingWorker[0]
+      No data returned for IBM
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10800]
+      DetectChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10801]
+      DetectChanges completed for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.Update[10004]
+      SaveChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10800]
+      DetectChanges starting for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10801]
+      DetectChanges completed for 'AppDbContext'.
+dbug: Microsoft.EntityFrameworkCore.Update[10005]
+      SaveChanges completed for 'AppDbContext' with 0 entities written to the database.
+info: MarketDashboard.Infrastructure.Workers.MarketDataPollingWorker[0]
+      Polling cycle complete. Saved prices for 2 symbols
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10407]
+      'AppDbContext' disposed.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20007]
+      Disposing connection to database 'marketdashboard' on server 'tcp://localhost:5433'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20008]
+      Disposed connection to database 'marketdashboard' on server 'tcp://localhost:5433' (0ms).
+info: MarketDashboard.Infrastructure.Workers.MarketDataPollingWorker[0]
+      MarketDataPollingWorker stopped.
+dbug: Microsoft.Extensions.Hosting.Internal.Host[4]
+      Hosting stopped

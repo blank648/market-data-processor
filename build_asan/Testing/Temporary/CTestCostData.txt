@@ -1,0 +1,22 @@
+MarketTickTest.SizeIs40Bytes 1 0.0321845
+MarketTickTest.TrivialCopyability 1 0.0312062
+MarketTickTest.MakePopulatesAllFields 1 0.0311195
+MarketTickTest.TimestampIsMonotonicallyIncreasing 1 0.031285
+MarketTickTest.SymbolTruncatesAt8Chars 1 0.031139
+MarketTickTest.ToStringContainsPriceAndSymbol 1 0.03139
+MarketTickTest.EqualityOperator 1 0.0315161
+RingBufferTest.EmptyOnConstruction 1 0.0314852
+RingBufferTest.PushToEmptySucceeds 1 0.0309827
+RingBufferTest.PopFromEmptyReturnsFalse 1 0.0310268
+RingBufferTest.PushBeyondCapacityReturnsFalse 1 0.030425
+RingBufferTest.FIFOOrderPreserved 1 0.0310523
+RingBufferTest.WrapAroundMaintainsIntegrity 1 0.0305553
+SPSCConcurrentTest.NoDataLossUnderConcurrentLoad 1 0.0603968
+SPSCConcurrentTest.ThroughputBaseline 1 0.0489403
+ThreadBaseTest.WorkerStartsAndStops 1 0.0463322
+ThreadBaseTest.RAIIStopsOnDestruction 1 0.0384681
+ThreadBaseTest.DoubleStopIsIdempotent 1 0.0337151
+IntegrationTest.FullPipelineProducesValidTicks 1 0.258782
+IntegrationTest.PipelineHandlesHighThroughputWithoutCrash 1 0.186095
+IntegrationTest.PipelineStopIsCleanWithRAII 1 0.0667831
+---
