@@ -66,6 +66,7 @@ private:
 ///     // … do work …
 ///     printer.stop();   // or just let it go out of scope
 /// @endcode
+template <typename Derived>
 class ThreadBase {
 public:
     // ─── Construction / Destruction ───────────────────────────────────────
@@ -143,7 +144,7 @@ public:
             } guard{running_};
 
             try {
-                run(StopToken(&stop_flag_));
+                static_cast<Derived*>(this)->run(StopToken(&stop_flag_));
             } catch (...) {
                 // Swallow: prevents std::terminate; flag is cleared by guard.
             }
@@ -183,17 +184,6 @@ public:
 
     /// @brief Returns the human-readable name assigned at construction.
     [[nodiscard]] const std::string& name() const noexcept { return name_; }
-
-protected:
-    // ─── Protected Interface ──────────────────────────────────────────────
-
-    /// @brief Override to implement the thread's processing loop.
-    ///
-    /// Poll `stop_token.stop_requested()` regularly to honour cooperative
-    /// cancellation. This method is called exactly once per `start()`.
-    ///
-    /// @param stop_token Cancellation token; check periodically to exit cleanly.
-    virtual void run(StopToken stop_token) = 0;
 
 private:
     /// @brief The name supplied at construction.

@@ -34,7 +34,8 @@ struct SymbolState {
  * Implements IFeedSource and utilizes a thread (ThreadBase) to asynchronously
  * produce market ticks and push them into an output lock-free SPSC ring buffer.
  */
-class FeedSimulator final : public ThreadBase, public IFeedSource {
+class FeedSimulator final : public ThreadBase<FeedSimulator>, public IFeedSource {
+    friend class ThreadBase<FeedSimulator>;
    public:
     /**
      * @brief Constructs a new FeedSimulator.
@@ -98,7 +99,7 @@ class FeedSimulator final : public ThreadBase, public IFeedSource {
      * @brief The thread function generating ticks loop.
      * @param st A StopToken provided by ThreadBase to signal stopping.
      */
-    void run(StopToken st) override;
+    void run(StopToken st);
 
     /**
      * @brief Generates a tick for the given symbol index.

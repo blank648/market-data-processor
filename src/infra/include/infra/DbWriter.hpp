@@ -4,52 +4,36 @@
 #pragma once
 
 #include <string>
-#include <string_view>
-#include <vector>
-#include <chrono>
-#include <libpq-fe.h>
+#include <pqxx/pqxx>
 
-#include "core/MarketTick.hpp"
+#include "core/MarketSnapshot.hpp"
 #include "core/RingBuffer.hpp"
 #include "core/ThreadBase.hpp"
 
+#include <vector>
+
 namespace mdp {
 
-/// @brief A pipeline stage that consumes MarketTick data and writes it to a PostgreSQL database.
-class DbWriter final : public ThreadBase {
+/// @brief A pipeline stage that consumes MarketSnapshot data and writes it to a PostgreSQL database.
+class DbWriter final : public ThreadBase<DbWriter> {
 public:
     /// @brief Constructs the DbWriter.
-    /// @param input The ring buffer to read ticks from (4K slots).
-    /// @param connString The PostgreSQL connection string.
-    DbWriter(TickRingBuffer4K& input, std::string_view connString);
+    /// @param input The ring buffer to read snapshots from (4K slots).
+    /// @param conn_string The PostgreSQL connection string.
+    DbWriter(RingBuffer<MarketSnapshot, 4096>& input, const std::string& conn_string);
 
-    /// @brief Destructor. Ensures the thread is stopped and connection is closed.
+    /// @brief Destructor. Ensures the thread is stopped.
     ~DbWriter() override;
 
-protected:
     /// @brief The main worker loop for the thread.
     /// @param st A stop token for cooperative cancellation.
-    void run(StopToken st) override;
+    void run(StopToken st);
 
 private:
-    /// @brief Attempts to connect to the PostgreSQL database.
-    /// @return true if successful, false otherwise.
-    bool connect();
+    void flush_to_db(pqxx::connection& conn, const std::vector<MarketSnapshot>& batch);
 
-    /// @brief Closes the connection to the database.
-    void disconnect();
-
-    /// @brief Flushes the current batch of ticks to the database.
-    void flush_batch();
-
-    TickRingBuffer4K& input_;
+    RingBuffer<MarketSnapshot, 4096>& input_;
     std::string conn_string_;
-    PGconn* conn_{nullptr};
-    std::vector<MarketTick> batch_;
-
-    static constexpr size_t BATCH_SIZE = 100;
-    static constexpr std::chrono::seconds RETRY_INTERVAL{5};
-    static constexpr std::chrono::seconds FLUSH_INTERVAL{1};
 };
 
 } // namespace mdp

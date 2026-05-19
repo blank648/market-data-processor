@@ -10,6 +10,7 @@ target_sources(core INTERFACE
     BASE_DIRS include
     FILES
         include/core/MarketTick.hpp
+        include/core/MarketSnapshot.hpp
         include/core/RingBuffer.hpp
         include/core/ThreadBase.hpp
 )

@@ -19,7 +19,7 @@ target_link_libraries(infra PUBLIC
     core
     spdlog::spdlog
     nlohmann_json::nlohmann_json
-    PostgreSQL::PostgreSQL
+    pqxx
 )
 
 target_compile_definitions(infra PUBLIC

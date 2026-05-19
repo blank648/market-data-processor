@@ -19,7 +19,8 @@ namespace mdp {
 /// prices and valid timestamps), enriches them (e.g., normalizes side
 /// indicators and ensures string null-termination), and writes the
 /// validated ticks to the next stage buffer.
-class TickParser final : public ThreadBase {
+class TickParser final : public ThreadBase<TickParser> {
+    friend class ThreadBase<TickParser>;
    public:
     /// @brief Constructs a TickParser connecting input and output ring buffers.
     ///
@@ -48,7 +49,7 @@ class TickParser final : public ThreadBase {
     /// and blocks with back-pressure if the output buffer is full.
     ///
     /// @param st Token to check for cooperative cancellation.
-    void run(StopToken st) override;
+    void run(StopToken st);
 
     /// @brief Validates a market tick against predefined rules.
     ///

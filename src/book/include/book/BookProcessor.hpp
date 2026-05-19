@@ -11,6 +11,7 @@
 
 #include "BookTypes.hpp"
 #include "OrderBook.hpp"
+#include "core/MarketSnapshot.hpp"
 #include "core/MarketTick.hpp"
 #include "core/RingBuffer.hpp"
 #include "core/ThreadBase.hpp"
@@ -19,14 +20,16 @@ namespace mdp {
 
 // Type alias for clarity
 using TickRingBuffer4K = RingBuffer<MarketTick, 4096>;
+using SnapshotRingBuffer4K = RingBuffer<MarketSnapshot, 4096>;
 
 /// @brief A pipeline stage that consumes normalized ticks and builds order books.
-class BookProcessor final : public ThreadBase {
+class BookProcessor final : public ThreadBase<BookProcessor> {
+    friend class ThreadBase<BookProcessor>;
    public:
     /// @brief Constructs the processor, linking it to an input ring buffer.
     /// @param input The ring buffer containing normalized MarketTick data.
     explicit BookProcessor(TickRingBuffer4K& input);
-    BookProcessor(TickRingBuffer4K& input, TickRingBuffer4K& output);
+    BookProcessor(TickRingBuffer4K& input, SnapshotRingBuffer4K& output);
 
     /// @brief Destructor. Stops the worker thread.
     ~BookProcessor() override {
@@ -51,11 +54,11 @@ class BookProcessor final : public ThreadBase {
    protected:
     /// @brief The main worker loop for the thread.
     /// @param st A stop token for cooperative cancellation.
-    void run(StopToken st) override;
+    void run(StopToken st);
 
    private:
     TickRingBuffer4K& input_;
-    TickRingBuffer4K* output_{nullptr};
+    SnapshotRingBuffer4K* output_{nullptr};
     std::unordered_map<std::string, OrderBook> books_;
     std::atomic<uint64_t> ticks_processed_{0};
 

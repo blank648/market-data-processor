@@ -229,15 +229,16 @@ TEST(SPSCConcurrentTest, ThroughputBaseline) {
 
 // ─── SUITE 4: ThreadBaseTest ───────────────────────────────────────────────
 
-class TestWorker : public ThreadBase {
+class TestWorker : public ThreadBase<TestWorker> {
+    friend class ThreadBase<TestWorker>;
 public:
     std::atomic<int> tick_count{0};
 
-    explicit TestWorker() : ThreadBase("TestWorker") {}
+    explicit TestWorker() : ThreadBase<TestWorker>("TestWorker") {}
     ~TestWorker() override { stop(); }
 
 protected:
-    void run(mdp::StopToken st) override {
+    void run(mdp::StopToken st) {
         while (!st.stop_requested()) {
             ++tick_count;
             std::this_thread::sleep_for(100us);

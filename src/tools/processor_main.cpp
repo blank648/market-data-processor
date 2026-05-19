@@ -73,6 +73,7 @@ int main() {
     TickRingBuffer4K  parser_to_norm;
     TickRingBuffer4K  norm_to_book;
     TickRingBuffer4K  book_to_db;
+    RingBuffer<MarketSnapshot, 4096> snapshot_to_db;
 
     // Feed Config
     FeedConfig config = FeedConfig::default_config();
@@ -88,8 +89,8 @@ int main() {
     FeedSimulator sim(config, sim_to_parser);
     TickParser    parser(sim_to_parser, parser_to_norm);
     Normalizer    norm(parser_to_norm, norm_to_book);
-    BookProcessor book(norm_to_book, book_to_db);
-    DbWriter      db_writer(book_to_db, db_conn_str);
+    BookProcessor book(norm_to_book, snapshot_to_db);
+    DbWriter      db_writer(snapshot_to_db, db_conn_str);
 
     // 6. Start Stages in Order
     log->info("Starting pipeline stages...");

@@ -26,11 +26,13 @@ void DbWriter::run(StopToken st) {
             pqxx::connection conn(conn_string_);
             log->info("Connected to database successfully!");
 
-            // Prepare the upsert statement
-            conn.prepare("upsert_price", 
-                         "INSERT INTO MarketPrices (Symbol, Price, Timestamp) "
-                         "VALUES ($1, $2, $3) "
-                         "ON CONFLICT (Symbol) DO UPDATE SET Price = EXCLUDED.Price, Timestamp = EXCLUDED.Timestamp;");
+            // INSERT with full schema: joins Symbols to resolve SymbolId, Source=2 (C++ processor).
+            // Uses snap.timestamp_ns (converted to seconds) for RecordedAt.
+            conn.prepare("insert_price",
+                         R"(INSERT INTO "MarketPrices"
+                              ("Symbol","Price","Volume","RecordedAt","Source","SymbolId","CreatedAt","UpdatedAt")
+                            SELECT $1::varchar, $2::numeric, $3::bigint, to_timestamp($4), 2, s."Id", NOW(), NOW()
+                            FROM "Symbols" s WHERE s."Ticker" = $1::varchar)");
 
             std::vector<MarketSnapshot> local_batch;
             local_batch.reserve(100);
@@ -54,6 +56,12 @@ void DbWriter::run(StopToken st) {
                     last_flush = now;
                 }
             }
+
+            // Flush any items accumulated since the last periodic window before exiting.
+            if (!local_batch.empty()) {
+                flush_to_db(conn, local_batch);
+                local_batch.clear();
+            }
         } catch (const std::exception& e) {
             log->error("Database connection failed: {}. Retrying in 5s...", e.what());
             // Retry with backoff sleep loop, checking stop_requested periodically
@@ -73,7 +81,11 @@ void DbWriter::flush_to_db(pqxx::connection& conn, const std::vector<MarketSnaps
     pqxx::work w(conn);
     for (const auto& snap : batch) {
         std::string sym(snap.symbol.data(), ::strnlen(snap.symbol.data(), snap.symbol.size()));
-        w.exec_prepared("upsert_price", sym, snap.price, snap.timestamp_ns);
+        w.exec_prepared("insert_price",
+            sym,
+            snap.price,
+            static_cast<int64_t>(snap.volume),
+            snap.timestamp_ns / 1'000'000'000.0);
     }
     w.commit();
 }

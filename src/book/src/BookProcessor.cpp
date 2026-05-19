@@ -27,7 +27,7 @@ static constexpr double kMaxValidPrice = 1'000'000.0;
 BookProcessor::BookProcessor(TickRingBuffer4K& input)
     : ThreadBase("BookProcessor"), input_(input), output_(nullptr) {}
 
-BookProcessor::BookProcessor(TickRingBuffer4K& input, TickRingBuffer4K& output)
+BookProcessor::BookProcessor(TickRingBuffer4K& input, SnapshotRingBuffer4K& output)
     : ThreadBase("BookProcessor"), input_(input), output_(&output) {}
 
 const OrderBook* BookProcessor::book(std::string_view symbol) const noexcept {
@@ -70,14 +70,31 @@ void BookProcessor::run(StopToken st) {
 
         const OrderSide side = determine_side(symbol, tick.price);
         const BookDelta delta = tick_to_delta(tick, side);
+        
+        TopOfBook old_top = it->second.top_of_book();
         it->second.apply(delta);
+        TopOfBook new_top = it->second.top_of_book();
+        
         log_->trace("Applied tick to book: {}", symbol);
         pushed = true;
         if (pushed) {
             ticks_processed_.fetch_add(1, std::memory_order_relaxed);
-            if (output_) {
-                // Best-effort push to downstream stage
-                output_->try_push(std::move(tick));
+            if (output_ && (old_top.best_bid != new_top.best_bid || old_top.best_ask != new_top.best_ask)) {
+                MarketSnapshot snap{};
+                std::memcpy(snap.symbol.data(), tick.symbol.data(), 8);
+                // Mid-price representation. If one side is empty, use the other.
+                if (new_top.best_bid > 0 && new_top.best_ask > 0) {
+                    snap.price = (new_top.best_bid + new_top.best_ask) / 2.0;
+                } else if (new_top.best_bid > 0) {
+                    snap.price = new_top.best_bid;
+                } else {
+                    snap.price = new_top.best_ask;
+                }
+                snap.volume = new_top.bid_volume + new_top.ask_volume;
+                snap.timestamp_ns = tick.timestamp_ns;
+                snap.sequence = it->second.updates_applied();
+                
+                output_->try_push(std::move(snap));
             }
         }
     }
@@ -94,11 +111,28 @@ void BookProcessor::run(StopToken st) {
 
         const OrderSide side = determine_side(symbol, tick.price);
         const BookDelta delta = tick_to_delta(tick, side);
+        
+        TopOfBook old_top = it->second.top_of_book();
         it->second.apply(delta);
+        TopOfBook new_top = it->second.top_of_book();
+        
         log_->trace("Applied tick to book: {}", symbol);
         ticks_processed_.fetch_add(1, std::memory_order_relaxed);
-        if (output_) {
-            output_->try_push(std::move(tick));
+        if (output_ && (old_top.best_bid != new_top.best_bid || old_top.best_ask != new_top.best_ask)) {
+            MarketSnapshot snap{};
+            std::memcpy(snap.symbol.data(), tick.symbol.data(), 8);
+            if (new_top.best_bid > 0 && new_top.best_ask > 0) {
+                snap.price = (new_top.best_bid + new_top.best_ask) / 2.0;
+            } else if (new_top.best_bid > 0) {
+                snap.price = new_top.best_bid;
+            } else {
+                snap.price = new_top.best_ask;
+            }
+            snap.volume = new_top.bid_volume + new_top.ask_volume;
+            snap.timestamp_ns = tick.timestamp_ns;
+            snap.sequence = it->second.updates_applied();
+            
+            output_->try_push(std::move(snap));
         }
     }
     

@@ -47,7 +47,8 @@ struct NormalizerStats {
 /// Normalizer is pipeline Stage 3. It reads validated ticks from TickParser,
 /// applies deduplication and monotonic timestamp checking per symbol, and
 /// forwards clean ticks to the next stage buffer.
-class Normalizer final : public ThreadBase {
+class Normalizer final : public ThreadBase<Normalizer> {
+    friend class ThreadBase<Normalizer>;
    public:
     /// @brief Constructs a Normalizer connecting input and output ring buffers.
     ///
@@ -68,7 +69,7 @@ class Normalizer final : public ThreadBase {
     /// @brief Main processing loop for the normalizer thread.
     ///
     /// @param st Token to check for cooperative cancellation.
-    void run(StopToken st) override;
+    void run(StopToken st);
 
     /// @brief Checks if a tick is an exact duplicate of the last processed tick for its symbol.
     ///

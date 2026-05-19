@@ -136,4 +136,4 @@ TEST_F(FeedSimulatorTest, SourceNameReturnsNonEmptyStringView) {
 static_assert(std::derived_from<FeedSimulator, IFeedSource>, "FeedSimulator must derive from IFeedSource");
 
 // 9. ThreadBase interface is satisfied
-static_assert(std::derived_from<FeedSimulator, ThreadBase>, "FeedSimulator must derive from ThreadBase");
+static_assert(std::derived_from<FeedSimulator, ThreadBase<FeedSimulator>>, "FeedSimulator must derive from ThreadBase");

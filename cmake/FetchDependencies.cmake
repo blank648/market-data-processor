@@ -45,3 +45,15 @@ FetchContent_Declare(
 )
 set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(nlohmann_json)
+
+# ── libpqxx v7.9.2 ────────────────────────────────────────────────────────────
+FetchContent_Declare(
+        libpqxx
+        GIT_REPOSITORY https://github.com/jtv/libpqxx.git
+        GIT_TAG        7.9.2
+        GIT_SHALLOW    TRUE
+)
+set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(BUILD_DOC OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(libpqxx)
+
