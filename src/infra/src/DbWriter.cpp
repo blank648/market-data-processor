@@ -4,148 +4,78 @@
 #include "infra/DbWriter.hpp"
 #include "infra/Logger.hpp"
 #include <thread>
+#include <chrono>
+#include <cstring>
 
 namespace mdp {
 
-DbWriter::DbWriter(TickRingBuffer4K& input, std::string_view connString)
-    : ThreadBase("DbWriter"), input_(input), conn_string_(connString) {
-    batch_.reserve(BATCH_SIZE);
-}
+DbWriter::DbWriter(RingBuffer<MarketSnapshot, 4096>& input, const std::string& conn_string)
+    : ThreadBase<DbWriter>("DbWriter"), input_(input), conn_string_(conn_string) {}
 
 DbWriter::~DbWriter() {
-    ThreadBase::stop();
-    disconnect();
+    stop();
 }
 
 void DbWriter::run(StopToken st) {
     auto log = Logger::get("DbWriter");
-    log->info("Starting DbWriter loop...");
-
-    auto last_flush = std::chrono::steady_clock::now();
+    log->info("Starting DbWriter thread...");
 
     while (!st.stop_requested()) {
-        if (!conn_) {
-            if (!connect()) {
-                // Wait 5 seconds before retrying, but check stop token
-                for (int i = 0; i < 50; ++i) {
-                    if (st.stop_requested()) break;
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        try {
+            log->info("Connecting to PostgreSQL database...");
+            pqxx::connection conn(conn_string_);
+            log->info("Connected to database successfully!");
+
+            // Prepare the upsert statement
+            conn.prepare("upsert_price", 
+                         "INSERT INTO MarketPrices (Symbol, Price, Timestamp) "
+                         "VALUES ($1, $2, $3) "
+                         "ON CONFLICT (Symbol) DO UPDATE SET Price = EXCLUDED.Price, Timestamp = EXCLUDED.Timestamp;");
+
+            std::vector<MarketSnapshot> local_batch;
+            local_batch.reserve(100);
+            auto last_flush = std::chrono::steady_clock::now();
+
+            // Keep connection open and check stop token
+            while (!st.stop_requested()) {
+                MarketSnapshot snap;
+                if (input_.try_pop(snap)) {
+                    local_batch.push_back(snap);
+                } else {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 }
-                continue;
+
+                auto now = std::chrono::steady_clock::now();
+                if (local_batch.size() >= 100 || std::chrono::duration_cast<std::chrono::milliseconds>(now - last_flush).count() >= 10) {
+                    if (!local_batch.empty()) {
+                        flush_to_db(conn, local_batch);
+                        local_batch.clear();
+                    }
+                    last_flush = now;
+                }
+            }
+        } catch (const std::exception& e) {
+            log->error("Database connection failed: {}. Retrying in 5s...", e.what());
+            // Retry with backoff sleep loop, checking stop_requested periodically
+            for (int i = 0; i < 50; ++i) {
+                if (st.stop_requested()) {
+                    break;
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
         }
-
-        MarketTick tick;
-        bool has_data = false;
-        while (batch_.size() < BATCH_SIZE && input_.try_pop(tick)) {
-            batch_.push_back(tick);
-            has_data = true;
-        }
-
-        auto now = std::chrono::steady_clock::now();
-        bool should_flush = (batch_.size() >= BATCH_SIZE) || 
-                           (!batch_.empty() && (now - last_flush) >= FLUSH_INTERVAL);
-
-        if (should_flush) {
-            flush_batch();
-            last_flush = now;
-        }
-
-        if (!has_data && batch_.empty()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
     }
 
-    // Final flush before exit
-    if (!batch_.empty() && conn_) {
-        flush_batch();
-    }
-
-    disconnect();
-    log->info("DbWriter loop stopped.");
+    log->info("DbWriter thread stopped.");
 }
 
-bool DbWriter::connect() {
-    auto log = Logger::get("DbWriter");
-    conn_ = PQconnectdb(conn_string_.c_str());
-
-    if (PQstatus(conn_) != CONNECTION_OK) {
-        log->error("Connection to database failed: {}", PQerrorMessage(conn_));
-        disconnect();
-        return false;
+void DbWriter::flush_to_db(pqxx::connection& conn, const std::vector<MarketSnapshot>& batch) {
+    pqxx::work w(conn);
+    for (const auto& snap : batch) {
+        std::string sym(snap.symbol.data(), ::strnlen(snap.symbol.data(), snap.symbol.size()));
+        w.exec_prepared("upsert_price", sym, snap.price, snap.timestamp_ns);
     }
-
-    log->info("Successfully connected to PostgreSQL.");
-    return true;
-}
-
-void DbWriter::disconnect() {
-    if (conn_) {
-        PQfinish(conn_);
-        conn_ = nullptr;
-    }
-}
-
-void DbWriter::flush_batch() {
-    if (batch_.empty() || !conn_) return;
-
-    auto log = Logger::get("DbWriter");
-    
-    // Use a transaction for the batch
-    PGresult* res = PQexec(conn_, "BEGIN");
-    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-        log->error("Failed to begin transaction: {}", PQerrorMessage(conn_));
-        PQclear(res);
-        return;
-    }
-    PQclear(res);
-
-    const char* query =
-        "INSERT INTO \"MarketPrices\" (\"Symbol\",\"Price\",\"Volume\",\"RecordedAt\",\"Source\",\"SymbolId\",\"CreatedAt\",\"UpdatedAt\") "
-        "SELECT $1::varchar,$2::numeric,$3::numeric,NOW(),2,s.\"Id\",NOW(),NOW() "
-        "FROM \"Symbols\" s WHERE s.\"Ticker\" = $1::varchar";
-
-    bool success = true;
-    for (const auto& tick : batch_) {
-        // Prepare parameters
-        std::string sym(tick.symbol.data(), tick.symbol.size());
-        // Trim null bytes
-        sym.erase(std::find(sym.begin(), sym.end(), '\0'), sym.end());
-        
-        std::string price_str = std::to_string(tick.price);
-        std::string vol_str = std::to_string(tick.volume);
-
-        const char* paramValues[3];
-        paramValues[0] = sym.c_str();
-        paramValues[1] = price_str.c_str();
-        paramValues[2] = vol_str.c_str();
-
-        res = PQexecParams(conn_, query, 3, nullptr, paramValues, nullptr, nullptr, 0);
-        if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-            log->error("Insert failed: {}", PQerrorMessage(conn_));
-            success = false;
-            PQclear(res);
-            break;
-        }
-        PQclear(res);
-    }
-
-    if (success) {
-        res = PQexec(conn_, "COMMIT");
-        if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-            log->error("Failed to commit transaction: {}", PQerrorMessage(conn_));
-        }
-        PQclear(res);
-        batch_.clear();
-    } else {
-        res = PQexec(conn_, "ROLLBACK");
-        PQclear(res);
-        // We keep the batch to retry next time? 
-        // Actually, if it's a persistent error (e.g. symbol not found), we might loop forever.
-        // But the user didn't specify error handling for the insert itself, only connection.
-        // For now, I'll clear it to avoid infinite loop on bad data, but in production we'd want more care.
-        batch_.clear(); 
-    }
+    w.commit();
 }
 
 } // namespace mdp
