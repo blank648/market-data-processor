@@ -1,5 +1,6 @@
 add_library(infra STATIC
     src/DbWriter.cpp
+    src/SignalDbWriter.cpp
 )
 
 target_include_directories(infra PUBLIC
@@ -13,10 +14,12 @@ target_sources(infra PUBLIC
         include/infra/Logger.hpp
         include/infra/MetricsCollector.hpp
         include/infra/DbWriter.hpp
+        include/infra/SignalDbWriter.hpp
 )
 
 target_link_libraries(infra PUBLIC
     core
+    strategy
     spdlog::spdlog
     nlohmann_json::nlohmann_json
     pqxx

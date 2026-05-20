@@ -26,22 +26,22 @@ public:
         // This prevents segfaults during static destruction.
         static spdlog::logger* leaked_logger = nullptr;
 
-        if (!leaked_logger) {
+        if (leaked_logger == nullptr) {
             try {
                 auto logger = spdlog::stdout_color_mt(std::string(app_name));
                 // Intentional leak of the shared_ptr to keep the logger alive forever
-                auto* persistent = new std::shared_ptr<spdlog::logger>(logger);
+                auto* persistent = new std::shared_ptr<spdlog::logger>(logger); // NOLINT(cppcoreguidelines-owning-memory)
                 leaked_logger = persistent->get();
             } catch (const spdlog::spdlog_ex&) {
                 auto existing = spdlog::get(std::string(app_name));
                 if (existing) {
-                    static auto* persistent = new std::shared_ptr<spdlog::logger>(existing);
+                    static auto* persistent = new std::shared_ptr<spdlog::logger>(existing); // NOLINT(cppcoreguidelines-owning-memory)
                     leaked_logger = persistent->get();
                 }
             }
         }
 
-        if (leaked_logger) {
+        if (leaked_logger != nullptr) {
             // Re-register as default in case spdlog::shutdown() was called previously
             spdlog::set_default_logger(std::shared_ptr<spdlog::logger>(leaked_logger, [](spdlog::logger*){}));
             leaked_logger->set_level(level);
@@ -54,7 +54,9 @@ public:
     static std::shared_ptr<spdlog::logger> get(std::string_view name) {
         try {
             auto logger = spdlog::get(std::string(name));
-            if (logger) return logger;
+            if (logger) {
+                return logger;
+            }
 
             auto default_logger = spdlog::default_logger();
             if (default_logger) {

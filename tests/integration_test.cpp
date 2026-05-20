@@ -4,7 +4,6 @@
  */
 
 #include <gtest/gtest.h>
-#include <atomic>
 #include <chrono>
 #include <thread>
 #include <vector>
@@ -87,17 +86,17 @@ TEST_F(IntegrationTest, FullPipelineProducesValidTicks) {
     }
 
     // Assertions
-    ASSERT_GT(collected.size(), 10u) << "Pipeline should have forwarded ticks";
-    EXPECT_GT(sim.ticks_published(), 0u);
-    EXPECT_GT(parser.ticks_processed(), 0u);
-    EXPECT_GT(norm.stats().ticks_forwarded, 0u);
+    ASSERT_GT(collected.size(), 10U) << "Pipeline should have forwarded ticks";
+    EXPECT_GT(sim.ticks_published(), 0U);
+    EXPECT_GT(parser.ticks_processed(), 0U);
+    EXPECT_GT(norm.stats().ticks_forwarded, 0U);
 
-    for (const auto& t : collected) {
-        EXPECT_GT(t.price,  0.0)  << "Price must be positive";
-        EXPECT_GT(t.volume, 0.0)  << "Volume must be positive";
-        EXPECT_GT(t.timestamp_ns, 0LL) << "Timestamp must be set";
-        EXPECT_LE(t.side, 2u)     << "Side must be 0, 1, or 2";
-        EXPECT_NE(t.symbol[0], '\0') << "Symbol must not be empty";
+    for (const auto& tick : collected) {
+        EXPECT_GT(tick.price,  0.0)  << "Price must be positive";
+        EXPECT_GT(tick.volume, 0.0)  << "Volume must be positive";
+        EXPECT_GT(tick.timestamp_ns, 0LL) << "Timestamp must be set";
+        EXPECT_LE(tick.side, 2U)     << "Side must be 0, 1, or 2";
+        EXPECT_NE(tick.symbol[0], '\0') << "Symbol must not be empty";
     }
 }
 
@@ -144,8 +143,8 @@ TEST_F(IntegrationTest, PipelineHandlesHighThroughputWithoutCrash) {
 
     // Primary assertion: no crash, no hang
     // Secondary: pipeline processed something
-    EXPECT_GT(sim.ticks_published() + sim.ticks_dropped(), 0u);
-    EXPECT_GT(parser.ticks_processed() + parser.ticks_rejected(), 0u);
+    EXPECT_GT(sim.ticks_published() + sim.ticks_dropped(), 0U);
+    EXPECT_GT(parser.ticks_processed() + parser.ticks_rejected(), 0U);
 
     // Log pipeline stats for human inspection
     auto stats = norm.stats();
@@ -264,10 +263,10 @@ TEST_F(IntegrationTest, BookProcessorReceivesTicks) {
 
     bool at_least_one_valid_book = false;
     for (const auto& symbol : config.symbols) {
-        const auto* b = book.book(symbol);
-        ASSERT_NE(b, nullptr) << "Book for " << symbol << " is null";
+        const auto* active_book = book.book(symbol);
+        ASSERT_NE(active_book, nullptr) << "Book for " << symbol << " is null";
 
-        auto tob = b->top_of_book();
+        auto tob = active_book->top_of_book();
         GTEST_LOG_(INFO) << "  [" << symbol << "] Top-of-book spread: " << tob.spread;
 
         if (tob.is_valid()) {
@@ -312,14 +311,14 @@ TEST_F(IntegrationTest, FullPipelineSmoke) {
 
     // Assertions
     auto stats = norm.stats();
-    EXPECT_GT(stats.ticks_forwarded, 0u);
+    EXPECT_GT(stats.ticks_forwarded, 0U);
     EXPECT_GE(stats.ticks_forwarded, stats.ticks_deduplicated);
 
     // bookprocessor processes at least one symbol
     bool has_active = false;
     for (const auto& sym : config.symbols) {
-        auto b = book.book(sym);
-        if (b != nullptr && b->updates_applied() > 0) {
+        const auto* active_book = book.book(sym);
+        if (active_book != nullptr && active_book->updates_applied() > 0) {
             has_active = true;
             break;
         }
@@ -357,11 +356,13 @@ TEST_F(IntegrationTest, GracefulShutdownUnderLoad) {
     // Push 50000 ticks directly into the RingBuffer from a separate thread
     auto spammer = std::async(std::launch::async, [&]() {
         for (int i = 0; i < 50000; ++i) {
-            auto t = MarketTick::make("AAPL", 150.0, 1.0, 0);
-            while (!sim_to_parser.try_push(std::move(t))) {
-                if (!parser.is_running()) return; // Abort safely if the pipeline stops
+            auto tick = MarketTick::make("AAPL", 150.0, 1.0, 0);
+            while (!sim_to_parser.try_push(tick)) {
+                if (!parser.is_running()) {
+                    return; // Abort safely if the pipeline stops
+                }
                 std::this_thread::yield();
-                t = MarketTick::make("AAPL", 150.0, 1.0, 0);
+                tick = MarketTick::make("AAPL", 150.0, 1.0, 0);
             }
         }
     });
@@ -384,7 +385,7 @@ TEST_F(IntegrationTest, GracefulShutdownUnderLoad) {
 
     // Stats are readable
     EXPECT_NO_THROW({
-        auto s = norm.stats();
-        EXPECT_GE(s.ticks_forwarded, 0u);
+        auto stats = norm.stats();
+        EXPECT_GE(stats.ticks_forwarded, 0U);
     });
 }

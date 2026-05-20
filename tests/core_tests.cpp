@@ -9,7 +9,6 @@
 
 #include <atomic>
 #include <chrono>
-#include <numeric>
 #include <string_view>
 #include <thread>
 #include <vector>
@@ -20,7 +19,7 @@ using namespace std::chrono_literals;
 // ─── SUITE 1: MarketTickTest ───────────────────────────────────────────────
 
 TEST(MarketTickTest, SizeIs40Bytes) {
-    EXPECT_EQ(sizeof(MarketTick), 40u);
+    EXPECT_EQ(sizeof(MarketTick), 40U);
 }
 
 TEST(MarketTickTest, TrivialCopyability) {
@@ -29,124 +28,128 @@ TEST(MarketTickTest, TrivialCopyability) {
 }
 
 TEST(MarketTickTest, MakePopulatesAllFields) {
-    auto t = MarketTick::make("BTCUSD", 42000.5, 1.23, 0);
+    auto tick = MarketTick::make("BTCUSD", 42000.5, 1.23, 0);
 
-    std::string_view sym{t.symbol.data(), 6};
+    std::string_view sym{tick.symbol.data(), 6};
     EXPECT_EQ(sym, "BTCUSD");
 
     // Check remainder of the symbol buffer is zeroed
-    EXPECT_EQ(t.symbol[6], '\0');
-    EXPECT_EQ(t.symbol[7], '\0');
+    EXPECT_EQ(tick.symbol[6], '\0');
+    EXPECT_EQ(tick.symbol[7], '\0');
 
-    EXPECT_DOUBLE_EQ(t.price, 42000.5);
-    EXPECT_DOUBLE_EQ(t.volume, 1.23);
-    EXPECT_EQ(t.side, 0);
-    EXPECT_GT(t.timestamp_ns, 0);
+    EXPECT_DOUBLE_EQ(tick.price, 42000.5);
+    EXPECT_DOUBLE_EQ(tick.volume, 1.23);
+    EXPECT_EQ(tick.side, 0);
+    EXPECT_GT(tick.timestamp_ns, 0);
 }
 
 TEST(MarketTickTest, TimestampIsMonotonicallyIncreasing) {
-    auto t1 = MarketTick::make("BTC", 1.0, 1.0, 0);
-    auto t2 = MarketTick::make("ETH", 1.0, 1.0, 0);
-    EXPECT_GE(t2.timestamp_ns, t1.timestamp_ns);
+    auto tick1 = MarketTick::make("BTC", 1.0, 1.0, 0);
+    auto tick2 = MarketTick::make("ETH", 1.0, 1.0, 0);
+    EXPECT_GE(tick2.timestamp_ns, tick1.timestamp_ns);
 }
 
 TEST(MarketTickTest, SymbolTruncatesAt8Chars) {
-    auto t = MarketTick::make("TOOLONGSYMBOL", 1.0, 1.0, 0);
-    std::string_view sym{t.symbol.data(), 8};
+    auto tick = MarketTick::make("TOOLONGSYMBOL", 1.0, 1.0, 0);
+    std::string_view sym{tick.symbol.data(), 8};
     EXPECT_EQ(sym, "TOOLONGS");
 }
 
 TEST(MarketTickTest, ToStringContainsPriceAndSymbol) {
-    auto t = MarketTick::make("BTCUSD", 42000.5, 1.23, 0);
-    std::string s = t.to_string();
-    EXPECT_NE(s.find("BTCUSD"), std::string::npos);
-    EXPECT_NE(s.find("42000.50"), std::string::npos);
-    EXPECT_NE(s.find("BID"), std::string::npos);
+    auto tick = MarketTick::make("BTCUSD", 42000.5, 1.23, 0);
+    std::string tick_str = tick.to_string();
+    EXPECT_NE(tick_str.find("BTCUSD"), std::string::npos);
+    EXPECT_NE(tick_str.find("42000.50"), std::string::npos);
+    EXPECT_NE(tick_str.find("BID"), std::string::npos);
 }
 
 TEST(MarketTickTest, EqualityOperator) {
-    auto t1 = MarketTick::make("BTCUSD", 42000.5, 1.23, 0);
-    auto t2 = t1; // Exact copy including timestamp and padding
-    EXPECT_EQ(t1, t2);
+    auto tick1 = MarketTick::make("BTCUSD", 42000.5, 1.23, 0);
+    auto tick2 = tick1; // Exact copy including timestamp and padding
+    EXPECT_EQ(tick1, tick2);
 
-    t2.price = 40000.0;
-    EXPECT_NE(t1, t2);
+    tick2.price = 40000.0;
+    EXPECT_NE(tick1, tick2);
 }
 
 // ─── SUITE 2: RingBufferTest ───────────────────────────────────────────────
 
-class RingBufferTest : public ::testing::Test {
-protected:
+struct RingBufferTest : public ::testing::Test {
+private:
     RingBuffer<MarketTick, 4> rb_;
 
-    MarketTick make_tick(double price) {
+protected:
+    RingBuffer<MarketTick, 4>& rb() { return rb_; }
+
+public:
+    static MarketTick make_tick(double price) {
         return MarketTick::make("TEST", price, 1.0, 0);
     }
 };
 
 TEST_F(RingBufferTest, EmptyOnConstruction) {
-    EXPECT_TRUE(rb_.empty());
-    EXPECT_EQ(rb_.size(), 0u);
-    EXPECT_EQ(rb_.capacity(), 4u);
+    EXPECT_TRUE(rb().empty());
+    EXPECT_EQ(rb().size(), 0U);
+    EXPECT_EQ(rb().capacity(), 4U);
 }
 
 TEST_F(RingBufferTest, PushToEmptySucceeds) {
-    ASSERT_TRUE(rb_.try_push(make_tick(100.0)));
-    EXPECT_EQ(rb_.size(), 1u);
-    EXPECT_FALSE(rb_.empty());
+    ASSERT_TRUE(rb().try_push(make_tick(100.0)));
+    EXPECT_EQ(rb().size(), 1U);
+    EXPECT_FALSE(rb().empty());
 }
 
 TEST_F(RingBufferTest, PopFromEmptyReturnsFalse) {
     MarketTick out;
-    ASSERT_FALSE(rb_.try_pop(out));
+    ASSERT_FALSE(rb().try_pop(out));
 }
 
 TEST_F(RingBufferTest, PushBeyondCapacityReturnsFalse) {
-    EXPECT_TRUE(rb_.try_push(make_tick(1.0)));
-    EXPECT_TRUE(rb_.try_push(make_tick(2.0)));
-    EXPECT_TRUE(rb_.try_push(make_tick(3.0)));
-    EXPECT_TRUE(rb_.try_push(make_tick(4.0)));
+    EXPECT_TRUE(rb().try_push(make_tick(1.0)));
+    EXPECT_TRUE(rb().try_push(make_tick(2.0)));
+    EXPECT_TRUE(rb().try_push(make_tick(3.0)));
+    EXPECT_TRUE(rb().try_push(make_tick(4.0)));
 
-    EXPECT_FALSE(rb_.try_push(make_tick(5.0)));
-    EXPECT_TRUE(rb_.full());
+    EXPECT_FALSE(rb().try_push(make_tick(5.0)));
+    EXPECT_TRUE(rb().full());
 }
 
 TEST_F(RingBufferTest, FIFOOrderPreserved) {
-    ASSERT_TRUE(rb_.try_push(make_tick(10.0)));
-    ASSERT_TRUE(rb_.try_push(make_tick(20.0)));
-    ASSERT_TRUE(rb_.try_push(make_tick(30.0)));
+    ASSERT_TRUE(rb().try_push(make_tick(10.0)));
+    ASSERT_TRUE(rb().try_push(make_tick(20.0)));
+    ASSERT_TRUE(rb().try_push(make_tick(30.0)));
 
     MarketTick out;
-    ASSERT_TRUE(rb_.try_pop(out));
+    ASSERT_TRUE(rb().try_pop(out));
     EXPECT_DOUBLE_EQ(out.price, 10.0);
 
-    ASSERT_TRUE(rb_.try_pop(out));
+    ASSERT_TRUE(rb().try_pop(out));
     EXPECT_DOUBLE_EQ(out.price, 20.0);
 
-    ASSERT_TRUE(rb_.try_pop(out));
+    ASSERT_TRUE(rb().try_pop(out));
     EXPECT_DOUBLE_EQ(out.price, 30.0);
 }
 
 TEST_F(RingBufferTest, WrapAroundMaintainsIntegrity) {
     // Push 4 ticks
     for (int i = 1; i <= 4; ++i) {
-        ASSERT_TRUE(rb_.try_push(make_tick(static_cast<double>(i))));
+        ASSERT_TRUE(rb().try_push(make_tick(static_cast<double>(i))));
     }
 
     // Pop 2
     MarketTick out;
-    ASSERT_TRUE(rb_.try_pop(out)); EXPECT_DOUBLE_EQ(out.price, 1.0);
-    ASSERT_TRUE(rb_.try_pop(out)); EXPECT_DOUBLE_EQ(out.price, 2.0);
+    ASSERT_TRUE(rb().try_pop(out)); EXPECT_DOUBLE_EQ(out.price, 1.0);
+    ASSERT_TRUE(rb().try_pop(out)); EXPECT_DOUBLE_EQ(out.price, 2.0);
 
     // Push 2 more (wraps around)
-    ASSERT_TRUE(rb_.try_push(make_tick(5.0)));
-    ASSERT_TRUE(rb_.try_push(make_tick(6.0)));
+    ASSERT_TRUE(rb().try_push(make_tick(5.0)));
+    ASSERT_TRUE(rb().try_push(make_tick(6.0)));
 
     // Pop all 4
-    ASSERT_TRUE(rb_.try_pop(out)); EXPECT_DOUBLE_EQ(out.price, 3.0);
-    ASSERT_TRUE(rb_.try_pop(out)); EXPECT_DOUBLE_EQ(out.price, 4.0);
-    ASSERT_TRUE(rb_.try_pop(out)); EXPECT_DOUBLE_EQ(out.price, 5.0);
-    ASSERT_TRUE(rb_.try_pop(out)); EXPECT_DOUBLE_EQ(out.price, 6.0);
+    ASSERT_TRUE(rb().try_pop(out)); EXPECT_DOUBLE_EQ(out.price, 3.0);
+    ASSERT_TRUE(rb().try_pop(out)); EXPECT_DOUBLE_EQ(out.price, 4.0);
+    ASSERT_TRUE(rb().try_pop(out)); EXPECT_DOUBLE_EQ(out.price, 5.0);
+    ASSERT_TRUE(rb().try_pop(out)); EXPECT_DOUBLE_EQ(out.price, 6.0);
 }
 
 // ─── SUITE 3: SPSCConcurrentTest ───────────────────────────────────────────
@@ -155,8 +158,9 @@ static constexpr int kMsgCount = 100'000;
 static constexpr std::size_t kBufSize = 1024;
 
 TEST(SPSCConcurrentTest, NoDataLossUnderConcurrentLoad) {
-    RingBuffer<MarketTick, kBufSize> rb;
-    std::atomic<int> produced{0}, consumed{0};
+    RingBuffer<MarketTick, kBufSize> buffer;
+    std::atomic<int> produced{0};
+    std::atomic<int> consumed{0};
     std::atomic<bool> stop_flag{false};
 
     std::vector<double> received;
@@ -165,7 +169,7 @@ TEST(SPSCConcurrentTest, NoDataLossUnderConcurrentLoad) {
     std::thread producer([&]() {
         for (int i = 0; i < kMsgCount && !stop_flag.load(std::memory_order_relaxed); ++i) {
             auto tick = MarketTick::make("PERF", static_cast<double>(i), 1.0, 0);
-            while (!stop_flag.load(std::memory_order_relaxed) && !rb.try_push(std::move(tick))) {
+            while (!stop_flag.load(std::memory_order_relaxed) && !buffer.try_push(tick)) {
                 // spin
             }
             ++produced;
@@ -175,7 +179,7 @@ TEST(SPSCConcurrentTest, NoDataLossUnderConcurrentLoad) {
     std::thread consumer([&]() {
         MarketTick out;
         while (!stop_flag.load(std::memory_order_relaxed) && consumed.load(std::memory_order_relaxed) < kMsgCount) {
-            if (rb.try_pop(out)) {
+            if (buffer.try_pop(out)) {
                 received.push_back(out.price);
                 consumed.fetch_add(1, std::memory_order_relaxed);
             }
@@ -192,8 +196,9 @@ TEST(SPSCConcurrentTest, NoDataLossUnderConcurrentLoad) {
 }
 
 TEST(SPSCConcurrentTest, ThroughputBaseline) {
-    RingBuffer<MarketTick, kBufSize> rb;
-    std::atomic<int> produced{0}, consumed{0};
+    RingBuffer<MarketTick, kBufSize> buffer;
+    std::atomic<int> produced{0};
+    std::atomic<int> consumed{0};
     std::atomic<bool> stop_flag{false};
 
     auto start = std::chrono::high_resolution_clock::now();
@@ -201,7 +206,7 @@ TEST(SPSCConcurrentTest, ThroughputBaseline) {
     std::thread producer([&]() {
         for (int i = 0; i < kMsgCount && !stop_flag.load(std::memory_order_relaxed); ++i) {
             auto tick = MarketTick::make("PERF", static_cast<double>(i), 1.0, 0);
-            while (!stop_flag.load(std::memory_order_relaxed) && !rb.try_push(std::move(tick))) {
+            while (!stop_flag.load(std::memory_order_relaxed) && !buffer.try_push(tick)) {
                 // spin
             }
             ++produced;
@@ -211,7 +216,7 @@ TEST(SPSCConcurrentTest, ThroughputBaseline) {
     std::thread consumer([&]() {
         MarketTick out;
         while (!stop_flag.load(std::memory_order_relaxed) && consumed.load(std::memory_order_relaxed) < kMsgCount) {
-            if (rb.try_pop(out)) {
+            if (buffer.try_pop(out)) {
                 consumed.fetch_add(1, std::memory_order_relaxed);
             }
         }
@@ -237,9 +242,15 @@ public:
     explicit TestWorker() : ThreadBase<TestWorker>("TestWorker") {}
     ~TestWorker() override { stop(); }
 
+    // Rule of Five: Delete copy/move operations as this class manages thread execution context
+    TestWorker(const TestWorker&) = delete;
+    TestWorker& operator=(const TestWorker&) = delete;
+    TestWorker(TestWorker&&) = delete;
+    TestWorker& operator=(TestWorker&&) = delete;
+
 protected:
-    void run(mdp::StopToken st) {
-        while (!st.stop_requested()) {
+    void run(mdp::StopToken token) {
+        while (!token.stop_requested()) {
             ++tick_count;
             std::this_thread::sleep_for(100us);
         }

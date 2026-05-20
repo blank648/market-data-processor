@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <cstdint>
@@ -44,7 +45,7 @@ struct MarketTick {
     std::uint8_t side;
 
     /// Explicit padding to bring total struct size to 40 bytes.
-    std::uint8_t _pad[7];  // NOLINT(readability-identifier-naming)
+    std::array<std::uint8_t, 7> _pad{};  // NOLINT(readability-identifier-naming)
 
     // ─── Factory ────────────────────────────────────────────────────────────
 
@@ -61,19 +62,19 @@ struct MarketTick {
     /// @return A fully initialised MarketTick.
     [[nodiscard]] static MarketTick make(std::string_view sym, double price, double volume,
                                          std::uint8_t side) noexcept {
-        MarketTick t{};
+        MarketTick tick{};
         // Copy symbol, truncating at 8 chars; remaining bytes already zero.
-        const std::size_t len = sym.size() < 8u ? sym.size() : 8u;
-        for (std::size_t i = 0; i < len; ++i) {
-            t.symbol[i] = sym[i];
+        const std::size_t len = sym.size() < 8U ? sym.size() : 8U;
+        if (len > 0) {
+            std::copy_n(sym.data(), len, tick.symbol.begin());
         }
-        t.price = price;
-        t.volume = volume;
-        t.side = side;
-        t.timestamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        tick.price = price;
+        tick.volume = volume;
+        tick.side = side;
+        tick.timestamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
                              std::chrono::steady_clock::now().time_since_epoch())
                              .count();
-        return t;
+        return tick;
     }
 
     // ─── Formatting ─────────────────────────────────────────────────────────
@@ -90,13 +91,9 @@ struct MarketTick {
     /// @return A formatted string describing this tick.
     [[nodiscard]] std::string to_string() const {
         // Build a null-terminated view of the symbol field.
-        const std::string_view sym_view{symbol.data(), [this]() -> std::size_t {
-                                            for (std::size_t i = 0; i < symbol.size(); ++i) {
-                                                if (symbol[i] == '\0')
-                                                    return i;
-                                            }
-                                            return symbol.size();
-                                        }()};
+        const auto* const iter = std::ranges::find(symbol, '\0');
+        const std::size_t len = static_cast<std::size_t>(std::distance(symbol.begin(), iter));
+        const std::string_view sym_view{symbol.data(), len};
 
         const std::string_view side_str = [this]() -> std::string_view {
             switch (side) {
@@ -126,8 +123,8 @@ struct MarketTick {
     /// @param os Output stream to write to.
     /// @param t  The tick to format.
     /// @return Reference to @p os for chaining.
-    friend std::ostream& operator<<(std::ostream& os, const MarketTick& t) {
-        return os << t.to_string();
+    friend std::ostream& operator<<(std::ostream& stream, const MarketTick& tick) {
+        return stream << tick.to_string();
     }
 
     // ─── JSON (forward-declared) ─────────────────────────────────────────────
@@ -137,8 +134,8 @@ struct MarketTick {
     /// The full definition lives in a separate translation unit that includes
     /// `<nlohmann/json.hpp>` to keep compile times low.
     ///
-    /// @param j JSON object to populate.
-    void to_json(nlohmann::json& j) const;
+    /// @param json JSON object to populate.
+    void to_json(nlohmann::json& json) const;
 };
 
 // ─── Static Assertions ────────────────────────────────────────────────────────

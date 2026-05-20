@@ -55,22 +55,22 @@ public:
         const TickParser&     parser,
         const Normalizer&     normalizer,
         const BookProcessor&  book
-    ) : feed_(feed), parser_(parser), normalizer_(normalizer), book_(book) {}
+    ) : feed_(&feed), parser_(&parser), normalizer_(&normalizer), book_(&book) {}
 
     [[nodiscard]] PipelineSnapshot snapshot() const noexcept {
         PipelineSnapshot snap{};
-        snap.feed_ticks_published = feed_.ticks_published();
-        snap.feed_ticks_dropped   = feed_.ticks_dropped();
-        snap.parser_ticks_processed = parser_.ticks_processed();
-        snap.parser_ticks_rejected  = parser_.ticks_rejected();
+        snap.feed_ticks_published = feed_->ticks_published();
+        snap.feed_ticks_dropped   = feed_->ticks_dropped();
+        snap.parser_ticks_processed = parser_->ticks_processed();
+        snap.parser_ticks_rejected  = parser_->ticks_rejected();
 
-        auto norm_stats = normalizer_.stats();
+        auto norm_stats = normalizer_->stats();
         snap.norm_ticks_forwarded = norm_stats.ticks_forwarded;
         snap.norm_ticks_deduplicated = norm_stats.ticks_deduplicated;
         snap.norm_ticks_reordered = norm_stats.ticks_reordered;
 
-        snap.book_ticks_processed = book_.ticks_processed();
-        snap.book_books_active = book_.books_active();
+        snap.book_ticks_processed = book_->ticks_processed();
+        snap.book_books_active = book_->books_active();
 
         snap.snapshot_time_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
                                     std::chrono::steady_clock::now().time_since_epoch()
@@ -122,10 +122,10 @@ public:
     }
 
 private:
-    const FeedSimulator&  feed_;
-    const TickParser&     parser_;
-    const Normalizer&     normalizer_;
-    const BookProcessor&  book_;
+    const FeedSimulator*  feed_;
+    const TickParser*     parser_;
+    const Normalizer*     normalizer_;
+    const BookProcessor*  book_;
 };
 
 } // namespace mdp

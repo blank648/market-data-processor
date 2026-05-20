@@ -1,6 +1,9 @@
 include(FetchContent)
 set(FETCHCONTENT_QUIET FALSE)   # Vrei să vezi ce downloadează în CLion Build log
 
+# Suppress CMake deprecation warnings for third-party dependencies fetched at configure time
+set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
+
 # ── Google Test v1.14.0 ───────────────────────────────────────────────────────
 FetchContent_Declare(
         googletest

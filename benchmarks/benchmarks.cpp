@@ -2,7 +2,6 @@
 #include <thread>
 #include <random>
 #include <cstring>
-#include <chrono>
 
 #include "core/MarketTick.hpp"
 #include "core/RingBuffer.hpp"
@@ -16,7 +15,6 @@
 #include <spdlog/spdlog.h>
 
 using namespace mdp;
-using namespace std::chrono_literals;
 
 // 1. BM_TickParser_Parse — parse a single valid tick string in a tight loop
 static void BM_TickParser_Parse(benchmark::State& state) {
@@ -25,25 +23,25 @@ static void BM_TickParser_Parse(benchmark::State& state) {
     TickParser parser(input, output);
     parser.start();
 
-    MarketTick t = MarketTick::make("AAPL", 150.0, 1.0, 0);
-    for (auto _ : state) {
+    MarketTick tick = MarketTick::make("AAPL", 150.0, 1.0, 0);
+    for (auto run : state) {
         // Push one tick into parser
-        while (!input.try_push(std::move(t))) {
-            t = MarketTick::make("AAPL", 150.0, 1.0, 0);
+        while (!input.try_push(tick)) {
+            tick = MarketTick::make("AAPL", 150.0, 1.0, 0);
             
             // Drain output to relieve backpressure if buffer full
-            MarketTick out;
+            MarketTick out{};
             output.try_pop(out);
         }
         
         // Drain output to relieve backpressure continuously
-        MarketTick out;
+        MarketTick out{};
         output.try_pop(out);
     }
 
     parser.stop();
 }
-BENCHMARK(BM_TickParser_Parse)->Iterations(100000);
+BENCHMARK(BM_TickParser_Parse)->Iterations(100000); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-owning-memory)
 
 // 2. BM_Normalizer_Push — push pre-constructed Tick into Normalizer (with thread running)
 static void BM_Normalizer_Push(benchmark::State& state) {
@@ -52,26 +50,26 @@ static void BM_Normalizer_Push(benchmark::State& state) {
     Normalizer norm(input, output);
     norm.start();
 
-    MarketTick t = MarketTick::make("AAPL", 150.0, 1.0, 0);
-    int64_t ts = 1000;
+    MarketTick tick = MarketTick::make("AAPL", 150.0, 1.0, 0);
+    int64_t timestamp = 1000;
     
-    for (auto _ : state) {
-        t.timestamp_ns = ts++; // Prevent immediate deduplication
+    for (auto run : state) {
+        tick.timestamp_ns = timestamp++; // Prevent immediate deduplication
         
-        while (!input.try_push(std::move(t))) {
-            t = MarketTick::make("AAPL", 150.0, 1.0, 0);
-            t.timestamp_ns = ts;
-            MarketTick out;
+        while (!input.try_push(tick)) {
+            tick = MarketTick::make("AAPL", 150.0, 1.0, 0);
+            tick.timestamp_ns = timestamp;
+            MarketTick out{};
             output.try_pop(out);
         }
         
-        MarketTick out;
+        MarketTick out{};
         output.try_pop(out);
     }
 
     norm.stop();
 }
-BENCHMARK(BM_Normalizer_Push)->Iterations(100000);
+BENCHMARK(BM_Normalizer_Push)->Iterations(100000); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-owning-memory)
 
 // 3. BM_OrderBook_Insert — insert a random bid/ask into OrderBook
 static void BM_OrderBook_Insert(benchmark::State& state) {
@@ -79,51 +77,53 @@ static void BM_OrderBook_Insert(benchmark::State& state) {
     std::mt19937 gen(42);
     std::uniform_real_distribution<double> dis(100.0, 200.0);
 
-    for (auto _ : state) {
-        BookDelta d{};
-        std::strncpy(d.symbol, "AAPL", 8);
-        d.side = OrderSide::BID;
-        d.price = dis(gen);
-        d.volume = 100;
-        d.timestamp_ns = 1000;
-        book.apply(d);
+    for (auto run : state) {
+        BookDelta delta{};
+        std::strncpy(delta.symbol.data(), "AAPL", delta.symbol.size() - 1);
+        delta.symbol.back() = '\0';
+        delta.side = OrderSide::BID;
+        delta.price = dis(gen);
+        delta.volume = 100;
+        delta.timestamp_ns = 1000;
+        book.apply(delta);
     }
 }
-BENCHMARK(BM_OrderBook_Insert)->Iterations(100000);
+BENCHMARK(BM_OrderBook_Insert)->Iterations(100000); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-owning-memory)
 
 // 4. BM_OrderBook_BestBid — query best_bid() on a book with 1000 price levels
 static void BM_OrderBook_BestBid(benchmark::State& state) {
     OrderBook book("AAPL");
     // Pre-fill the book with 1000 price levels
     for (int i = 0; i < 1000; ++i) {
-        BookDelta d{};
-        std::strncpy(d.symbol, "AAPL", 8);
-        d.side = OrderSide::BID;
-        d.price = 100.0 + (i * 0.01);
-        d.volume = 100;
-        book.apply(d);
+        BookDelta delta{};
+        std::strncpy(delta.symbol.data(), "AAPL", delta.symbol.size() - 1);
+        delta.symbol.back() = '\0';
+        delta.side = OrderSide::BID;
+        delta.price = 100.0 + (i * 0.01);
+        delta.volume = 100;
+        book.apply(delta);
     }
 
-    for (auto _ : state) {
+    for (auto run : state) {
         benchmark::DoNotOptimize(book.best_bid());
     }
 }
-BENCHMARK(BM_OrderBook_BestBid)->Iterations(100000);
+BENCHMARK(BM_OrderBook_BestBid)->Iterations(100000); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-owning-memory)
 
 // 5. BM_RingBuffer_PushPop — single producer / single consumer, measure round-trip latency
 static void BM_RingBuffer_PushPop(benchmark::State& state) {
     TickRingBuffer16K buffer;
-    MarketTick t = MarketTick::make("AAPL", 150.0, 1.0, 0);
+    MarketTick tick = MarketTick::make("AAPL", 150.0, 1.0, 0);
 
-    for (auto _ : state) {
-        buffer.try_push(std::move(t));
-        MarketTick out;
+    for (auto run : state) {
+        buffer.try_push(tick);
+        MarketTick out{};
         buffer.try_pop(out);
         benchmark::DoNotOptimize(out);
-        t = MarketTick::make("AAPL", 150.0, 1.0, 0);
+        tick = MarketTick::make("AAPL", 150.0, 1.0, 0);
     }
 }
-BENCHMARK(BM_RingBuffer_PushPop)->Iterations(100000);
+BENCHMARK(BM_RingBuffer_PushPop)->Iterations(100000); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-owning-memory)
 
 // 6. BM_FullPipeline_Throughput — measure ticks/sec through FeedSim→Norm→Book pipeline
 class FullPipelineFixture : public benchmark::Fixture {
@@ -160,11 +160,10 @@ public:
     }
 
     void TearDown(const ::benchmark::State& state) override {
-        // [FIX — Destructor Ordering]
-        if (sim) sim->stop();
-        if (parser) parser->stop();
-        if (norm) norm->stop();
-        if (book) book->stop();
+        if (sim) { sim->stop(); }
+        if (parser) { parser->stop(); }
+        if (norm) { norm->stop(); }
+        if (book) { book->stop(); }
         
         sim.reset();
         parser.reset();
@@ -180,19 +179,19 @@ public:
 };
 
 BENCHMARK_DEFINE_F(FullPipelineFixture, BM_FullPipeline_Throughput)(benchmark::State& state) {
-    int64_t ts = 1000;
+    int64_t timestamp = 1000;
     
-    for (auto _ : state) {
-        MarketTick t = MarketTick::make("AAPL", 150.0, 1.0, 0);
-        t.timestamp_ns = ts++;
+    for (auto run : state) {
+        MarketTick tick = MarketTick::make("AAPL", 150.0, 1.0, 0);
+        tick.timestamp_ns = timestamp++;
         
-        while (!sim_to_parser->try_push(std::move(t))) {
+        while (!sim_to_parser->try_push(tick)) {
             std::this_thread::yield();
-            t = MarketTick::make("AAPL", 150.0, 1.0, 0);
-            t.timestamp_ns = ts;
+            tick = MarketTick::make("AAPL", 150.0, 1.0, 0);
+            tick.timestamp_ns = timestamp;
         }
     }
 }
-BENCHMARK_REGISTER_F(FullPipelineFixture, BM_FullPipeline_Throughput)->Iterations(100000);
+BENCHMARK_REGISTER_F(FullPipelineFixture, BM_FullPipeline_Throughput)->Iterations(100000); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-owning-memory)
 
 

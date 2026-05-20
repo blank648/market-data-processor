@@ -28,6 +28,11 @@ class TickParser final : public ThreadBase<TickParser> {
     /// @param output Buffer to write validated and enriched ticks to.
     explicit TickParser(TickRingBuffer16K& input, TickRingBuffer4K& output);
 
+    TickParser(const TickParser&) = delete;
+    TickParser& operator=(const TickParser&) = delete;
+    TickParser(TickParser&&) = delete;
+    TickParser& operator=(TickParser&&) = delete;
+
     ~TickParser() override {
         stop();
     }
@@ -49,7 +54,7 @@ class TickParser final : public ThreadBase<TickParser> {
     /// and blocks with back-pressure if the output buffer is full.
     ///
     /// @param st Token to check for cooperative cancellation.
-    void run(StopToken st);
+    void run(StopToken stop_token);
 
     /// @brief Validates a market tick against predefined rules.
     ///
@@ -58,7 +63,7 @@ class TickParser final : public ThreadBase<TickParser> {
     ///
     /// @param tick The tick to validate.
     /// @return true if the tick is valid; false if it should be discarded.
-    [[nodiscard]] bool validate(const MarketTick& tick) const noexcept;
+    [[nodiscard]] static bool validate(const MarketTick& tick) noexcept;
 
     /// @brief Enriches and normalizes a valid market tick.
     ///
@@ -66,7 +71,14 @@ class TickParser final : public ThreadBase<TickParser> {
     /// field to a maximum of 2 (trade).
     ///
     /// @param tick The tick to enrich (modified in-place).
-    void enrich(MarketTick& tick) const noexcept;
+    static void enrich(MarketTick& tick) noexcept;
+
+    /// @brief Processes a single tick from the input buffer.
+    /// @return true if a tick was successfully popped and processed; false otherwise.
+    bool process_tick(StopToken& stop_token) noexcept;
+
+    /// @brief Drains all remaining ticks from the input buffer.
+    void drain_input() noexcept;
 
     TickRingBuffer16K& input_;
     TickRingBuffer4K& output_;

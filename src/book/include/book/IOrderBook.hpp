@@ -16,7 +16,15 @@ struct BookSnapshot;
 /// @note This interface is designed to be used by value or reference, not polymorphic pointers.
 /// No virtual destructor is provided.
 class IOrderBook {
-public:
+   public:
+    IOrderBook() = default;
+    virtual ~IOrderBook() = default;
+
+    IOrderBook(const IOrderBook&) = delete;
+    IOrderBook& operator=(const IOrderBook&) = delete;
+    IOrderBook(IOrderBook&&) = default;
+    IOrderBook& operator=(IOrderBook&&) = default;
+
     /// @brief Apply a delta update (a single price level change).
     /// @param delta The change to apply to the book.
     virtual void apply(const BookDelta& delta) noexcept = 0;
@@ -42,4 +50,3 @@ public:
 };
 
 }  // namespace mdp
-

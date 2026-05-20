@@ -3,21 +3,20 @@
 
 #include "book/BookProcessor.hpp"
 
-#include "core/MarketTick.hpp"
-#include "core/RingBuffer.hpp"
-
 #include <cstring>
 #include <thread>
 
+#include "core/MarketTick.hpp"
+#include "core/RingBuffer.hpp"
 #include "infra/Logger.hpp"
 
 namespace mdp {
 
 namespace {
-static constexpr double kAlpha = 0.1;
-static constexpr double kMinValidPrice = 0.10;
-static constexpr double kMaxValidPrice = 1'000'000.0;
-}
+constexpr double kAlpha = 0.1;
+constexpr double kMinValidPrice = 0.10;
+constexpr double kMaxValidPrice = 1'000'000.0;
+}  // namespace
 
 // [NOT THREAD-SAFE] books_ and reference_price_ are accessed EXCLUSIVELY
 // from run() (jthread). book() const accessor is intended for post-stop()
@@ -25,17 +24,24 @@ static constexpr double kMaxValidPrice = 1'000'000.0;
 // is a data race — document this in BookProcessor.hpp.
 
 BookProcessor::BookProcessor(TickRingBuffer4K& input)
-    : ThreadBase("BookProcessor"), input_(input), output_(nullptr) {}
+    : ThreadBase("BookProcessor"), input_(input) {}
 
-BookProcessor::BookProcessor(TickRingBuffer4K& input, SnapshotRingBuffer4K& output)
-    : ThreadBase("BookProcessor"), input_(input), output_(&output) {}
+BookProcessor::BookProcessor(TickRingBuffer4K& input, SnapshotRingBuffer4K& db_queue)
+    : ThreadBase("BookProcessor"), input_(input), db_queue_(&db_queue) {}
+
+BookProcessor::BookProcessor(TickRingBuffer4K& input, SnapshotRingBuffer4K& db_queue,
+                             SnapshotRingBuffer4K& signal_queue)
+    : ThreadBase("BookProcessor"),
+      input_(input),
+      db_queue_(&db_queue),
+      signal_queue_(&signal_queue) {}
 
 const OrderBook* BookProcessor::book(std::string_view symbol) const noexcept {
-    auto it = books_.find(std::string{symbol});
-    if (it == books_.end()) {
+    auto iter = books_.find(std::string{symbol});
+    if (iter == books_.end()) {
         return nullptr;
     }
-    return &it->second;
+    return &iter->second;
 }
 
 uint64_t BookProcessor::ticks_processed() const noexcept {
@@ -46,97 +52,69 @@ uint64_t BookProcessor::books_active() const noexcept {
     return static_cast<uint64_t>(books_.size());
 }
 
-void BookProcessor::run(StopToken st) {
+void BookProcessor::run(StopToken stop_token) {
     auto log_ = mdp::Logger::get("BookProcessor");
     log_->info("BookProcessor starting, tracking {} symbols", books_active());
-    
-    MarketTick tick;
-    while (!st.stop_requested()) {
+
+    MarketTick tick{};
+    while (!stop_token.stop_requested()) {
         if (!input_.try_pop(tick)) {
             std::this_thread::yield();
             continue;
         }
-
-        const std::string symbol{tick.symbol.data(),
-                                 ::strnlen(tick.symbol.data(), tick.symbol.size())};
-        auto it = books_.find(symbol);
-        if (it == books_.end()) {
-            auto inserted = books_.emplace(symbol, OrderBook{symbol});
-            it = inserted.first;
-        }
-
-        // [COUNTER INTEGRITY] Only increment on confirmed processing.
-        bool pushed = false;
-
-        const OrderSide side = determine_side(symbol, tick.price);
-        const BookDelta delta = tick_to_delta(tick, side);
-        
-        TopOfBook old_top = it->second.top_of_book();
-        it->second.apply(delta);
-        TopOfBook new_top = it->second.top_of_book();
-        
-        log_->trace("Applied tick to book: {}", symbol);
-        pushed = true;
-        if (pushed) {
-            ticks_processed_.fetch_add(1, std::memory_order_relaxed);
-            if (output_ && (old_top.best_bid != new_top.best_bid || old_top.best_ask != new_top.best_ask)) {
-                MarketSnapshot snap{};
-                std::memcpy(snap.symbol.data(), tick.symbol.data(), 8);
-                // Mid-price representation. If one side is empty, use the other.
-                if (new_top.best_bid > 0 && new_top.best_ask > 0) {
-                    snap.price = (new_top.best_bid + new_top.best_ask) / 2.0;
-                } else if (new_top.best_bid > 0) {
-                    snap.price = new_top.best_bid;
-                } else {
-                    snap.price = new_top.best_ask;
-                }
-                snap.volume = new_top.bid_volume + new_top.ask_volume;
-                snap.timestamp_ns = tick.timestamp_ns;
-                snap.sequence = it->second.updates_applied();
-                
-                output_->try_push(std::move(snap));
-            }
-        }
+        process_tick(tick);
     }
 
     // Drain remaining ticks after stop is requested
     while (input_.try_pop(tick)) {
-        const std::string symbol{tick.symbol.data(),
-                                 ::strnlen(tick.symbol.data(), tick.symbol.size())};
-        auto it = books_.find(symbol);
-        if (it == books_.end()) {
-            auto inserted = books_.emplace(symbol, OrderBook{symbol});
-            it = inserted.first;
-        }
+        process_tick(tick);
+    }
 
-        const OrderSide side = determine_side(symbol, tick.price);
-        const BookDelta delta = tick_to_delta(tick, side);
-        
-        TopOfBook old_top = it->second.top_of_book();
-        it->second.apply(delta);
-        TopOfBook new_top = it->second.top_of_book();
-        
-        log_->trace("Applied tick to book: {}", symbol);
-        ticks_processed_.fetch_add(1, std::memory_order_relaxed);
-        if (output_ && (old_top.best_bid != new_top.best_bid || old_top.best_ask != new_top.best_ask)) {
-            MarketSnapshot snap{};
-            std::memcpy(snap.symbol.data(), tick.symbol.data(), 8);
-            if (new_top.best_bid > 0 && new_top.best_ask > 0) {
-                snap.price = (new_top.best_bid + new_top.best_ask) / 2.0;
-            } else if (new_top.best_bid > 0) {
-                snap.price = new_top.best_bid;
-            } else {
-                snap.price = new_top.best_ask;
-            }
-            snap.volume = new_top.bid_volume + new_top.ask_volume;
-            snap.timestamp_ns = tick.timestamp_ns;
-            snap.sequence = it->second.updates_applied();
-            
-            output_->try_push(std::move(snap));
+    log_->info("BookProcessor stopped");
+}
+
+void BookProcessor::process_tick(const MarketTick& tick) {
+    auto log_ = mdp::Logger::get("BookProcessor");
+    const std::string symbol{tick.symbol.data(), ::strnlen(tick.symbol.data(), tick.symbol.size())};
+    auto iter = books_.find(symbol);
+    if (iter == books_.end()) {
+        auto inserted = books_.emplace(symbol, OrderBook{symbol});
+        iter = inserted.first;
+    }
+
+    const OrderSide side = determine_side(symbol, tick.price);
+    const BookDelta delta = tick_to_delta(tick, side);
+
+    TopOfBook old_top = iter->second.top_of_book();
+    iter->second.apply(delta);
+    TopOfBook new_top = iter->second.top_of_book();
+
+    log_->trace("Applied tick to book: {}", symbol);
+    ticks_processed_.fetch_add(1, std::memory_order_relaxed);
+
+    if ((db_queue_ != nullptr || signal_queue_ != nullptr) &&
+        (old_top.best_bid != new_top.best_bid || old_top.best_ask != new_top.best_ask)) {
+        MarketSnapshot snap{};
+        snap.symbol = tick.symbol;
+        // Mid-price representation. If one side is empty, use the other.
+        if (new_top.best_bid > 0 && new_top.best_ask > 0) {
+            snap.price = (new_top.best_bid + new_top.best_ask) / 2.0;
+        } else if (new_top.best_bid > 0) {
+            snap.price = new_top.best_bid;
+        } else {
+            snap.price = new_top.best_ask;
+        }
+        snap.volume = static_cast<double>(new_top.bid_volume + new_top.ask_volume);
+        snap.timestamp_ns = static_cast<int64_t>(tick.timestamp_ns);
+        snap.sequence = static_cast<int64_t>(iter->second.updates_applied());
+
+        if (db_queue_ != nullptr) {
+            db_queue_->try_push(snap);
+        }
+        if (signal_queue_ != nullptr) {
+            signal_queue_->try_push(snap);
         }
     }
-    
-    log_->info("BookProcessor stopped");
 }
 
 OrderSide BookProcessor::determine_side(std::string_view symbol, double price) noexcept {
@@ -148,30 +126,28 @@ OrderSide BookProcessor::determine_side(std::string_view symbol, double price) n
     }
 
     const std::string key{symbol};
-    auto it = reference_price_.find(key);
-    if (it == reference_price_.end()) {
+    auto iter = reference_price_.find(key);
+    if (iter == reference_price_.end()) {
         reference_price_.emplace(key, price);
         return OrderSide::BID;
     }
 
-    double& ref = it->second;
+    double& ref = iter->second;
     OrderSide side = (price < ref) ? OrderSide::BID : OrderSide::ASK;
 
     // [EMA RESET] If this side would cross the book, reset the
     // reference to current price so subsequent ticks re-center.
     // This prevents positive feedback where ref drifts away from
     // actual book levels and rejects all ticks of one side.
-    const auto* bk = book(symbol);
-    if (bk != nullptr) {
-        bool would_cross = (side == OrderSide::BID &&
-                            bk->best_ask() > 0.0 &&
-                            price >= bk->best_ask()) ||
-                           (side == OrderSide::ASK &&
-                            bk->best_bid() > 0.0 &&
-                            price <= bk->best_bid());
+    const auto* book_ptr = book(symbol);
+    if (book_ptr != nullptr) {
+        bool would_cross =
+            (side == OrderSide::BID && book_ptr->best_ask() > 0.0 &&
+             price >= book_ptr->best_ask()) ||
+            (side == OrderSide::ASK && book_ptr->best_bid() > 0.0 && price <= book_ptr->best_bid());
         if (would_cross) {
             // Reset reference to midpoint of current book
-            ref = (bk->best_bid() + bk->best_ask()) / 2.0;
+            ref = (book_ptr->best_bid() + book_ptr->best_ask()) / 2.0;
             // Re-classify against the reset reference
             side = (price < ref) ? OrderSide::BID : OrderSide::ASK;
         }
@@ -186,15 +162,13 @@ OrderSide BookProcessor::determine_side(std::string_view symbol, double price) n
 }
 
 BookDelta BookProcessor::tick_to_delta(const MarketTick& tick, OrderSide side) noexcept {
-    BookDelta d;
-    std::memcpy(d.symbol, tick.symbol.data(), 8);
-    d.side = side;
-    d.price = tick.price;
-    d.volume = tick.volume;
-    d.timestamp_ns = tick.timestamp_ns;
-    return d;
+    BookDelta delta{};
+    delta.symbol = tick.symbol;
+    delta.side = side;
+    delta.price = tick.price;
+    delta.volume = static_cast<uint64_t>(tick.volume);
+    delta.timestamp_ns = tick.timestamp_ns;
+    return delta;
 }
 
 }  // namespace mdp
-
-

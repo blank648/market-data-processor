@@ -3,18 +3,19 @@
 
 #pragma once
 
-#include "IOrderBook.hpp"
-#include "BookTypes.hpp"
+#include <array>
 #include <cstdint>
-#include <functional>
 #include <map>
 #include <string_view>
+
+#include "BookTypes.hpp"
+#include "IOrderBook.hpp"
 
 namespace mdp {
 
 /// @brief A concrete, single-symbol, non-thread-safe order book implementation.
 class OrderBook final : public IOrderBook {
-public:
+   public:
     /// @brief Constructs an order book for a specific symbol.
     /// @param symbol The financial instrument's symbol.
     explicit OrderBook(std::string_view symbol);
@@ -64,8 +65,8 @@ public:
     /// @return The symbol as a string_view.
     [[nodiscard]] std::string_view symbol() const noexcept;
 
-private:
-    char symbol_[8]{};
+   private:
+    std::array<char, 8> symbol_{};
     // [CV NOTE] std::map is used for its O(log N) update performance and
     // iterator stability. For the expected low number of price levels per
     // symbol and sub-microsecond tick rates, this is an acceptable trade-off
@@ -85,5 +86,3 @@ private:
 };
 
 }  // namespace mdp
-
-

@@ -9,6 +9,7 @@ target_sources(unit_tests PRIVATE
     infra_tests.cpp
     feed_tests.cpp
     processing_tests.cpp
+    strategy_tests.cpp
 )
 
 target_link_libraries(unit_tests PRIVATE
@@ -16,6 +17,7 @@ target_link_libraries(unit_tests PRIVATE
     feed
     book
     infra
+    strategy
     GTest::gtest_main
     GTest::gmock
 )

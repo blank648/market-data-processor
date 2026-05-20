@@ -52,10 +52,10 @@ public:
         // [FIX — Destructor Ordering]
         // Explicitly stop in producer-to-consumer order.
         // This ensures buffers are drained naturally before stages stop.
-        if (sim) sim->stop();
-        if (parser) parser->stop();
-        if (norm) norm->stop();
-        if (book) book->stop();
+        if (sim) { sim->stop(); }
+        if (parser) { parser->stop(); }
+        if (norm) { norm->stop(); }
+        if (book) { book->stop(); }
         
         // Destroy stages before buffers
         sim.reset();
@@ -72,7 +72,7 @@ public:
 };
 
 BENCHMARK_DEFINE_F(PipelineFixture, BM_Pipeline_Throughput)(benchmark::State& state) {
-    for (auto _ : state) {
+    for (auto run : state) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
@@ -87,7 +87,7 @@ BENCHMARK_DEFINE_F(PipelineFixture, BM_Pipeline_Throughput)(benchmark::State& st
         snap.feed_drop_rate() * 100.0);
 }
 
-BENCHMARK_REGISTER_F(PipelineFixture, BM_Pipeline_Throughput)
+BENCHMARK_REGISTER_F(PipelineFixture, BM_Pipeline_Throughput) // NOLINT(cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-owning-memory)
     ->Arg(1000)->Arg(5000)->Arg(10000)->Arg(50000)
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
@@ -95,10 +95,10 @@ BENCHMARK_REGISTER_F(PipelineFixture, BM_Pipeline_Throughput)
 BENCHMARK_DEFINE_F(PipelineFixture, BM_Pipeline_BookSnapshotLatency)(benchmark::State& state) {
     std::this_thread::sleep_for(std::chrono::milliseconds(150));
 
-    for (auto _ : state) {
-        auto* ob = book->book("AAPL");
-        if (ob) {
-            auto snap = ob->snapshot();
+    for (auto run : state) {
+        const auto* order_book = book->book("AAPL");
+        if (order_book != nullptr) {
+            auto snap = order_book->snapshot();
             benchmark::DoNotOptimize(snap);
         }
     }
@@ -106,7 +106,7 @@ BENCHMARK_DEFINE_F(PipelineFixture, BM_Pipeline_BookSnapshotLatency)(benchmark::
     state.SetItemsProcessed(state.iterations());
 }
 
-BENCHMARK_REGISTER_F(PipelineFixture, BM_Pipeline_BookSnapshotLatency)
+BENCHMARK_REGISTER_F(PipelineFixture, BM_Pipeline_BookSnapshotLatency) // NOLINT(cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-owning-memory)
     ->UseRealTime()
     ->MinTime(1.0)
     ->Unit(benchmark::kNanosecond);

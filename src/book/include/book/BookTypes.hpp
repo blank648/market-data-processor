@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <string_view>
 #include <vector>
@@ -17,7 +18,7 @@ enum class OrderSide : uint8_t {
 
 /// @brief Represents a single price level in the order book.
 struct PriceLevel {
-    double   price{0.0};
+    double price{0.0};
     uint64_t volume{0};
 
     bool operator==(const PriceLevel& other) const {
@@ -32,12 +33,12 @@ struct PriceLevel {
 /// @brief Represents the best bid and ask prices for a given symbol.
 struct TopOfBook {
     std::string_view symbol;
-    double           best_bid{0.0};
-    uint64_t         bid_volume{0};
-    double           best_ask{0.0};
-    uint64_t         ask_volume{0};
-    double           spread{0.0};      // best_ask - best_bid
-    uint64_t         timestamp_ns{0};
+    double best_bid{0.0};
+    uint64_t bid_volume{0};
+    double best_ask{0.0};
+    uint64_t ask_volume{0};
+    double spread{0.0};  // best_ask - best_bid
+    uint64_t timestamp_ns{0};
 
     /// @brief Checks if the TopOfBook data is valid.
     /// @return True if the book has a valid bid, ask, and spread.
@@ -48,21 +49,20 @@ struct TopOfBook {
 
 /// @brief Represents a single price-level update derived from a MarketTick.
 struct BookDelta {
-    char      symbol[8]{};
+    std::array<char, 8> symbol{};
     OrderSide side{OrderSide::BID};
-    double    price{0.0};
-    uint64_t  volume{0};  // 0 = remove this price level
-    uint64_t  timestamp_ns{0};
+    double price{0.0};
+    uint64_t volume{0};  // 0 = remove this price level
+    uint64_t timestamp_ns{0};
 };
 
 /// @brief A full snapshot of an order book for a symbol.
 struct BookSnapshot {
-    char                    symbol[8]{};
+    std::array<char, 8> symbol{};
     std::vector<PriceLevel> bids;  // sorted descending by price
     std::vector<PriceLevel> asks;  // sorted ascending by price
-    uint64_t                timestamp_ns{0};
-    uint64_t                sequence{0};  // monotonically increasing
+    uint64_t timestamp_ns{0};
+    uint64_t sequence{0};  // monotonically increasing
 };
 
 }  // namespace mdp
-

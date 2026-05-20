@@ -12,7 +12,7 @@ inline void suppress_logs() {
     mdp::Logger::init("bench_norm", spdlog::level::off);
 }
 
-static void BM_Normalizer_Throughput_Unique(benchmark::State& state) {
+void BM_Normalizer_Throughput_Unique(benchmark::State& state) {
     suppress_logs();
     TickRingBuffer4K input;
     TickRingBuffer4K output;
@@ -23,21 +23,21 @@ static void BM_Normalizer_Throughput_Unique(benchmark::State& state) {
     MarketTick out{};
     double price = 150.0;
 
-    for (auto _ : state) {
+    for (auto run : state) {
         int64_t pushed = 0;
         while (pushed < batch) {
             MarketTick tick = MarketTick::make(
                 "AAPL", price, 100.0, 1);
             price += 0.01;
-            if (price > 300.0) price = 150.0;
-            if (input.try_push(std::move(tick))) ++pushed; // Note: adjusted to use try_push as ring_buffer requires it
+            if (price > 300.0) { price = 150.0; }
+            if (input.try_push(tick)) { ++pushed; } // Note: adjusted to use try_push as ring_buffer requires it
         }
         int64_t drained = 0;
         const auto deadline =
             std::chrono::steady_clock::now() + std::chrono::seconds(5);
         while (drained < batch &&
                std::chrono::steady_clock::now() < deadline) {
-            if (output.try_pop(out)) ++drained; // Note: adjusted to use try_pop
+            if (output.try_pop(out)) { ++drained; } // Note: adjusted to use try_pop
         }
         benchmark::DoNotOptimize(out);
     }
@@ -49,11 +49,11 @@ static void BM_Normalizer_Throughput_Unique(benchmark::State& state) {
         static_cast<double>(state.iterations() * batch),
         benchmark::Counter::kIsRate);
 }
-BENCHMARK(BM_Normalizer_Throughput_Unique)
+BENCHMARK(BM_Normalizer_Throughput_Unique) // NOLINT(cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-owning-memory)
     ->Arg(100)->Arg(1000)
     ->UseRealTime();
 
-static void BM_Normalizer_Throughput_Duplicate(benchmark::State& state) {
+void BM_Normalizer_Throughput_Duplicate(benchmark::State& state) {
     suppress_logs();
     TickRingBuffer4K input;
     TickRingBuffer4K output;
@@ -63,10 +63,10 @@ static void BM_Normalizer_Throughput_Duplicate(benchmark::State& state) {
     const int64_t batch = state.range(0);
     MarketTick tick = MarketTick::make("AAPL", 150.0, 100.0, 1);
 
-    for (auto _ : state) {
+    for (auto run : state) {
         int64_t pushed = 0;
         while (pushed < batch) {
-            if (input.try_push(MarketTick(tick))) ++pushed; // Note: adjusted to try_push
+            if (input.try_push(tick)) { ++pushed; } // Note: adjusted to try_push
         }
         MarketTick out{};
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
@@ -77,7 +77,7 @@ static void BM_Normalizer_Throughput_Duplicate(benchmark::State& state) {
     spdlog::shutdown();
     state.SetItemsProcessed(state.iterations() * batch);
 }
-BENCHMARK(BM_Normalizer_Throughput_Duplicate)
+BENCHMARK(BM_Normalizer_Throughput_Duplicate) // NOLINT(cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-owning-memory)
     ->Arg(100)->Arg(1000)
     ->UseRealTime();
 

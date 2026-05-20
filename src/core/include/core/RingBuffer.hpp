@@ -8,7 +8,6 @@
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
-#include <type_traits>
 
 #include "MarketTick.hpp"
 
@@ -23,17 +22,17 @@ namespace mdp {
 /// Any type satisfying this concept must have:
 ///   - A `double` member named `price`.
 ///   - A member named `timestamp_ns` convertible to `int64_t`.
-template <typename T>
-concept TickLike = requires(T t) {
-    { t.price } -> std::convertible_to<double>;
-    { t.timestamp_ns } -> std::convertible_to<int64_t>;
+template<typename T>
+concept TickLike = requires(T tick) {
+    { tick.price } -> std::convertible_to<double>;
+    { tick.timestamp_ns } -> std::convertible_to<int64_t>;
 };
 
 /// @brief Constrains a non-type template parameter to be a power of two.
 ///
 /// Enables bitmask indexing (`index & (N - 1)`) instead of modulo division,
 /// which is critical for the hot-path performance of the ring buffer.
-template <std::size_t N>
+template<std::size_t N>
 concept PowerOfTwo = (N > 0) && ((N & (N - 1)) == 0);
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -55,7 +54,7 @@ concept PowerOfTwo = (N > 0) && ((N & (N - 1)) == 0);
 /// - `empty()`, `full()`, `size()`, `capacity()` are safe from any thread
 ///   but return approximate snapshots — values may be stale by the time
 ///   the caller acts on them.
-template <typename T, std::size_t N>
+template<typename T, std::size_t N>
     requires TickLike<T> && PowerOfTwo<N>
 class RingBuffer final {
     // === DESIGN NOTES ====================================================
@@ -93,20 +92,44 @@ class RingBuffer final {
     //    is undefined behaviour.
     // =====================================================================
 
-public:
+   public:
     // ─── Construction ─────────────────────────────────────────────────────
 
     /// @brief Default-constructs the buffer with zero-initialised atomics.
     RingBuffer() = default;
+    ~RingBuffer() = default;
 
-    RingBuffer(const RingBuffer&)            = delete;
+    RingBuffer(const RingBuffer&) = delete;
     RingBuffer& operator=(const RingBuffer&) = delete;
-    RingBuffer(RingBuffer&&)                 = delete;
-    RingBuffer& operator=(RingBuffer&&)      = delete;
+    RingBuffer(RingBuffer&&) = delete;
+    RingBuffer& operator=(RingBuffer&&) = delete;
 
     // ─── Producer API ─────────────────────────────────────────────────────
 
-    /// @brief Attempts to enqueue an element without blocking.
+    /// @brief Attempts to enqueue an element without blocking (by copying).
+    ///
+    /// @note **PRODUCER THREAD ONLY.**
+    ///
+    /// @param item Element to copy into the buffer.
+    /// @return `true` if enqueued; `false` if the buffer is full.
+    bool try_push(const T& item) noexcept {
+        const std::size_t head = head_.value.load(std::memory_order_relaxed);
+        const std::size_t tail = tail_.value.load(std::memory_order_acquire);
+
+        if ((head - tail) == N) {
+            return false;  // Buffer is full.
+        }
+
+        buffer_[head & (N - 1)] = item;
+
+        // [MEMORY MODEL] release: ensures the buffer write above is visible
+        // to the consumer before the consumer sees the incremented head.
+        head_.value.store(head + 1, std::memory_order_release);
+
+        return true;
+    }
+
+    /// @brief Attempts to enqueue an element without blocking (by moving).
     ///
     /// @note **PRODUCER THREAD ONLY.**
     ///
@@ -197,7 +220,7 @@ public:
         return N;
     }
 
-private:
+   private:
     // ─── Storage ──────────────────────────────────────────────────────────
     // buffer_ is placed first for cache-friendliness (frequently accessed
     // elements sit at the lowest address offsets of the object).
@@ -212,7 +235,7 @@ private:
     /// consumer's `tail_`, which reside on separate cache lines.
     struct alignas(64) AlignedIndex {
         std::atomic<std::size_t> value{0};
-        std::byte _pad[64 - sizeof(std::atomic<std::size_t>)];  // NOLINT
+        std::array<std::byte, 64 - sizeof(std::atomic<std::size_t>)> _pad{};  // NOLINT
     };
 
     AlignedIndex head_;  ///< Write index — modified by the producer only.
@@ -224,7 +247,7 @@ private:
 // ═════════════════════════════════════════════════════════════════════════════
 
 /// @brief A RingBuffer specialised for `MarketTick` with configurable capacity.
-template <std::size_t N>
+template<std::size_t N>
 using TickRingBuffer = RingBuffer<MarketTick, N>;
 
 /// @brief 4 096-slot tick ring buffer (≈160 KiB of tick data).

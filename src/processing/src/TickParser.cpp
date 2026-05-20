@@ -3,9 +3,9 @@
 
 #include "processing/TickParser.hpp"
 #include "infra/Logger.hpp"
+#include <algorithm>
 #include <cmath>
 #include <thread>
-#include <utility>
 
 namespace mdp {
 
@@ -20,55 +20,78 @@ uint64_t TickParser::ticks_rejected() const noexcept {
     return ticks_rejected_.load(std::memory_order_relaxed);
 }
 
-void TickParser::run(StopToken st) {
+void TickParser::run(StopToken stop_token) {
     auto log_ = mdp::Logger::get("TickParser");
-    log_->info("TickParser starting");
+    if (log_ != nullptr) {
+        log_->info("TickParser starting");
+    }
     
-    MarketTick tick;
-    while (!st.stop_requested()) {
-        if (input_.try_pop(tick)) {
-            if (validate(tick)) {
-                enrich(tick);
-                log_->trace("Parsed tick: {}", tick.to_string());
-                // [COUNTER INTEGRITY] Only increment on confirmed push.
-                // Tick lost during shutdown (stop requested mid-spin) is NOT counted.
-                bool pushed = false;
-                while (!st.stop_requested()) {
-                    if (output_.try_push(std::move(tick))) {
-                        pushed = true;
-                        break;
-                    }
-                    std::this_thread::yield();  // back-pressure: output full
-                }
-                if (pushed) {
-                    ticks_processed_.fetch_add(1, std::memory_order_relaxed);
-                }
-            } else {
-                ticks_rejected_.fetch_add(1, std::memory_order_relaxed);
-            }
-        } else {
+    while (!stop_token.stop_requested()) {
+        if (!process_tick(stop_token)) {
             std::this_thread::yield();  // nothing to read — yield to OS
         }
     }
 
     // Drain remaining ticks after stop is requested
+    drain_input();
+    
+    if (log_ != nullptr) {
+        log_->info("TickParser stopped, ticks_parsed={}", ticks_processed_.load(std::memory_order_relaxed));
+    }
+}
+
+bool TickParser::process_tick(StopToken& stop_token) noexcept {
+    MarketTick tick;
+    if (!input_.try_pop(tick)) {
+        return false;
+    }
+    
+    if (validate(tick)) {
+        enrich(tick);
+        auto log_ = mdp::Logger::get("TickParser");
+        if (log_ != nullptr) {
+            log_->trace("Parsed tick: {}", tick.to_string());
+        }
+        // [COUNTER INTEGRITY] Only increment on confirmed push.
+        // Tick lost during shutdown (stop requested mid-spin) is NOT counted.
+        bool pushed = false;
+        while (!stop_token.stop_requested()) {
+            if (output_.try_push(tick)) {
+                pushed = true;
+                break;
+            }
+            std::this_thread::yield();  // back-pressure: output full
+        }
+        if (pushed) {
+            ticks_processed_.fetch_add(1, std::memory_order_relaxed);
+        }
+    } else {
+        ticks_rejected_.fetch_add(1, std::memory_order_relaxed);
+    }
+    return true;
+}
+
+void TickParser::drain_input() noexcept {
+    MarketTick tick;
+    auto log_ = mdp::Logger::get("TickParser");
+    
     while (input_.try_pop(tick)) {
         if (validate(tick)) {
             enrich(tick);
-            log_->trace("Parsed tick: {}", tick.to_string());
+            if (log_ != nullptr) {
+                log_->trace("Parsed tick: {}", tick.to_string());
+            }
             // Ignore back-pressure and just try to push; drop if full
-            if (output_.try_push(std::move(tick))) {
+            if (output_.try_push(tick)) {
                 ticks_processed_.fetch_add(1, std::memory_order_relaxed);
             }
         } else {
             ticks_rejected_.fetch_add(1, std::memory_order_relaxed);
         }
     }
-    
-    log_->info("TickParser stopped, ticks_parsed={}", ticks_processed_.load(std::memory_order_relaxed));
 }
 
-bool TickParser::validate(const MarketTick& tick) const noexcept {
+bool TickParser::validate(const MarketTick& tick) noexcept {
     if (tick.price <= 0.0 || std::isnan(tick.price) || std::isinf(tick.price)) {
         return false;
     }
@@ -87,11 +110,9 @@ bool TickParser::validate(const MarketTick& tick) const noexcept {
     return true;
 }
 
-void TickParser::enrich(MarketTick& tick) const noexcept {
+void TickParser::enrich(MarketTick& tick) noexcept {
     tick.symbol[7] = '\0';
-    if (tick.side > 2) {
-        tick.side = 2;
-    }
+    tick.side = std::min<std::uint8_t>(tick.side, 2);
 }
 
 }  // namespace mdp

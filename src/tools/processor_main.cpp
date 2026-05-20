@@ -1,4 +1,3 @@
-#include <iostream>
 #include <vector>
 #include <string>
 #include <sstream>
@@ -12,6 +11,8 @@
 #include "processing/Normalizer.hpp"
 #include "book/BookProcessor.hpp"
 #include "infra/DbWriter.hpp"
+#include "infra/SignalDbWriter.hpp"
+#include "strategy/SignalEngine.hpp"
 #include "infra/Logger.hpp"
 #include "core/RingBuffer.hpp"
 
@@ -19,20 +20,27 @@
 
 using namespace mdp;
 
-// Global flag for signal handling
-std::atomic<bool> g_running{true};
+namespace {
+class SignalStatus {
+   public:
+    static std::atomic<bool>& running() noexcept {
+        static std::atomic<bool> status{true};
+        return status;
+    }
+};
 
 void signal_handler(int signal) {
     if (signal == SIGINT || signal == SIGTERM) {
-        g_running = false;
+        SignalStatus::running().store(false, std::memory_order_relaxed);
     }
 }
+} // namespace
 
 std::vector<std::string> split_symbols(const std::string& input) {
     std::vector<std::string> symbols;
-    std::stringstream ss(input);
+    std::stringstream stream(input);
     std::string item;
-    while (std::getline(ss, item, ',')) {
+    while (std::getline(stream, item, ',')) {
         if (!item.empty()) {
             symbols.push_back(item);
         }
@@ -49,7 +57,7 @@ int main() {
 
     // 2. Read DB Connection String
     const char* db_conn_env = std::getenv("MDP_DB_CONNECTION");
-    if (!db_conn_env) {
+    if (db_conn_env == nullptr) {
         log->error("Environment variable MDP_DB_CONNECTION is missing!");
         return 1;
     }
@@ -57,7 +65,7 @@ int main() {
 
     // 3. Read Symbols
     const char* symbols_env = std::getenv("MDP_SYMBOLS");
-    std::string symbols_str = symbols_env ? symbols_env : "AAPL,MSFT,GOOGL,IBM,TSLA,AMZN";
+    std::string symbols_str = (symbols_env != nullptr) ? symbols_env : "AAPL,MSFT,GOOGL,IBM,TSLA,AMZN";
     std::vector<std::string> symbols = split_symbols(symbols_str);
     
     log->info("Configured symbols: {}", symbols_str);
@@ -72,8 +80,9 @@ int main() {
     TickRingBuffer16K sim_to_parser;
     TickRingBuffer4K  parser_to_norm;
     TickRingBuffer4K  norm_to_book;
-    TickRingBuffer4K  book_to_db;
     RingBuffer<MarketSnapshot, 4096> snapshot_to_db;
+    SnapshotRingBuffer4K signal_queue;
+    SignalRingBuffer4K alert_queue;
 
     // Feed Config
     FeedConfig config = FeedConfig::default_config();
@@ -89,12 +98,16 @@ int main() {
     FeedSimulator sim(config, sim_to_parser);
     TickParser    parser(sim_to_parser, parser_to_norm);
     Normalizer    norm(parser_to_norm, norm_to_book);
-    BookProcessor book(norm_to_book, snapshot_to_db);
-    DbWriter      db_writer(snapshot_to_db, db_conn_str);
+    BookProcessor book(norm_to_book, snapshot_to_db, signal_queue);
+    DbWriter       db_writer(snapshot_to_db, db_conn_str);
+    SignalEngine   signal_engine(signal_queue, alert_queue);
+    SignalDbWriter signal_db_writer(alert_queue, db_conn_str);
 
     // 6. Start Stages in Order
     log->info("Starting pipeline stages...");
     db_writer.start();
+    signal_db_writer.start();
+    signal_engine.start();
     book.start();
     norm.start();
     parser.start();
@@ -103,7 +116,7 @@ int main() {
     log->info("Processor service is running. Press Ctrl+C to stop.");
 
     // 7. Wait for Signal
-    while (g_running) {
+    while (SignalStatus::running().load(std::memory_order_relaxed)) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
@@ -124,6 +137,12 @@ int main() {
     
     db_writer.stop();
     log->info("DbWriter stopped.");
+
+    signal_db_writer.stop();
+    log->info("SignalDbWriter stopped.");
+    
+    signal_engine.stop();
+    log->info("SignalEngine stopped.");
 
     log->info("Market Data Processor service stopped successfully.");
 

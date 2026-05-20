@@ -56,6 +56,11 @@ class Normalizer final : public ThreadBase<Normalizer> {
     /// @param output Buffer to write normalized ticks to.
     explicit Normalizer(TickRingBuffer4K& input, TickRingBuffer4K& output);
 
+    Normalizer(const Normalizer&) = delete;
+    Normalizer& operator=(const Normalizer&) = delete;
+    Normalizer(Normalizer&&) = delete;
+    Normalizer& operator=(Normalizer&&) = delete;
+
     ~Normalizer() override {
         stop();
     }
@@ -69,7 +74,7 @@ class Normalizer final : public ThreadBase<Normalizer> {
     /// @brief Main processing loop for the normalizer thread.
     ///
     /// @param st Token to check for cooperative cancellation.
-    void run(StopToken st);
+    void run(StopToken stop_token);
 
     /// @brief Checks if a tick is an exact duplicate of the last processed tick for its symbol.
     ///
@@ -89,12 +94,19 @@ class Normalizer final : public ThreadBase<Normalizer> {
     /// @param tick The newly processed tick.
     void update_state(const MarketTick& tick) noexcept;
 
+    /// @brief Processes a single tick from the input buffer.
+    /// @return true if a tick was successfully popped and processed; false otherwise.
+    bool process_tick(StopToken& stop_token) noexcept;
+
+    /// @brief Drains all remaining ticks from the input buffer.
+    void drain_input() noexcept;
+
     TickRingBuffer4K& input_;
     TickRingBuffer4K& output_;
 
     /// @brief Custom hash functor for a fixed-size char array representing a symbol.
     struct SymbolHash {
-        std::size_t operator()(const std::array<char, 8>& s) const noexcept;
+        std::size_t operator()(const std::array<char, 8>& symbol) const noexcept;
     };
 
     // [DEDUP STRATEGY]

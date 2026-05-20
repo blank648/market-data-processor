@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT
 
 #include <chrono>
-#include <cmath>
 #include <thread>
 #include <future>
 #include <concepts>
@@ -47,21 +46,25 @@ TEST(FeedConfigTest, InvalidConfigZeroVolatility) {
 // ── SUITE 2: FeedSimulatorTest ───────────────────────────────────────────────
 
 class FeedSimulatorTest : public ::testing::Test {
-protected:
+private:
     TickRingBuffer16K output_buffer_;
     FeedConfig        config_ = FeedConfig::default_config();
+
+protected:
+    TickRingBuffer16K& output_buffer() { return output_buffer_; }
+    const FeedConfig& config() const { return config_; }
 };
 
 // 1. FeedSimulator constructs without throwing
 TEST_F(FeedSimulatorTest, ConstructsWithoutThrowing) {
     EXPECT_NO_THROW({
-        FeedSimulator sim(config_, output_buffer_);
+        FeedSimulator sim(config(), output_buffer());
     });
 }
 
 // 2. start() -> is_running() returns true within 50ms (poll to handle sanitizer overhead)
 TEST_F(FeedSimulatorTest, StartSetsIsRunningTrueWithin50ms) {
-    FeedSimulator sim(config_, output_buffer_);
+    FeedSimulator sim(config(), output_buffer());
     sim.start();
     const auto deadline = std::chrono::steady_clock::now() + 500ms;
     while (!sim.is_running() && std::chrono::steady_clock::now() < deadline) {
@@ -73,7 +76,7 @@ TEST_F(FeedSimulatorTest, StartSetsIsRunningTrueWithin50ms) {
 
 // 3. stop() -> is_running() returns false within 100ms
 TEST_F(FeedSimulatorTest, StopSetsIsRunningFalseWithin100ms) {
-    FeedSimulator sim(config_, output_buffer_);
+    FeedSimulator sim(config(), output_buffer());
     sim.start();
     std::this_thread::sleep_for(50ms);
     ASSERT_TRUE(sim.is_running());
@@ -85,7 +88,7 @@ TEST_F(FeedSimulatorTest, StopSetsIsRunningFalseWithin100ms) {
 
 // 4. Double start() is a no-op (second call does not throw, is_running() stays true)
 TEST_F(FeedSimulatorTest, DoubleStartIsNoOp) {
-    FeedSimulator sim(config_, output_buffer_);
+    FeedSimulator sim(config(), output_buffer());
     sim.start();
     std::this_thread::sleep_for(20ms);
     ASSERT_TRUE(sim.is_running());
@@ -99,7 +102,7 @@ TEST_F(FeedSimulatorTest, DoubleStartIsNoOp) {
 
 // 5. Double stop() is a no-op (does not throw)
 TEST_F(FeedSimulatorTest, DoubleStopIsNoOp) {
-    FeedSimulator sim(config_, output_buffer_);
+    FeedSimulator sim(config(), output_buffer());
     sim.start();
     std::this_thread::sleep_for(20ms);
     sim.stop();
@@ -115,7 +118,7 @@ TEST_F(FeedSimulatorTest, DoubleStopIsNoOp) {
 // 6. Destructor with running thread: construct, start(), let destructor run — must not hang
 TEST_F(FeedSimulatorTest, DestructorWithRunningThreadDoesNotHang) {
     auto task = std::async(std::launch::async, [this]() {
-        FeedSimulator sim(config_, output_buffer_);
+        FeedSimulator sim(config(), output_buffer());
         sim.start();
         std::this_thread::sleep_for(20ms);
         // Destructor called here at end of scope
@@ -127,7 +130,7 @@ TEST_F(FeedSimulatorTest, DestructorWithRunningThreadDoesNotHang) {
 
 // 7. source_name() returns non-empty string_view
 TEST_F(FeedSimulatorTest, SourceNameReturnsNonEmptyStringView) {
-    FeedSimulator sim(config_, output_buffer_);
+    FeedSimulator sim(config(), output_buffer());
     auto name = sim.source_name();
     EXPECT_FALSE(name.empty());
 }

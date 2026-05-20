@@ -4,6 +4,8 @@
 #include <chrono>
 #include <vector>
 #include <string>
+#include <span>
+#include <format>
 
 #include "feed/FeedSimulator.hpp"
 #include "processing/TickParser.hpp"
@@ -18,7 +20,8 @@
 using namespace mdp;
 
 int main(int argc, char* argv[]) {
-    bool json_mode = (argc > 1 && std::string(argv[1]) == "--json");
+    const std::span<char* const> args(argv, static_cast<size_t>(argc));
+    const bool json_mode = (args.size() > 1 && std::string_view(args[1]) == "--json");
 
     // Pipeline setup
     TickRingBuffer16K sim_to_parser;
@@ -59,23 +62,27 @@ int main(int argc, char* argv[]) {
 
     // Health Checks
     std::vector<std::string> failures;
-    if (snap.feed_ticks_published == 0) failures.push_back("feed_ticks_published == 0 (pipeline did not start)");
-    if (snap.parser_ticks_processed == 0) failures.push_back("parser_ticks_processed == 0");
-    if (snap.norm_ticks_forwarded == 0) failures.push_back("norm_ticks_forwarded == 0");
-    if (snap.book_ticks_processed == 0) failures.push_back("book_ticks_processed == 0");
+    if (snap.feed_ticks_published == 0) {
+        failures.push_back("feed_ticks_published == 0 (pipeline did not start)");
+    }
+    if (snap.parser_ticks_processed == 0) {
+        failures.push_back("parser_ticks_processed == 0");
+    }
+    if (snap.norm_ticks_forwarded == 0) {
+        failures.push_back("norm_ticks_forwarded == 0");
+    }
+    if (snap.book_ticks_processed == 0) {
+        failures.push_back("book_ticks_processed == 0");
+    }
 
     double drop_rate = snap.feed_drop_rate();
     if (drop_rate >= 0.05) {
-        char buf[128];
-        std::snprintf(buf, sizeof(buf), "feed_drop_rate %.2f%% exceeds threshold 5.00%%", drop_rate * 100.0);
-        failures.push_back(buf);
+        failures.push_back(std::format("feed_drop_rate {:.2f}% exceeds threshold 5.00%", drop_rate * 100.0));
     }
 
     double reject_rate = snap.parser_reject_rate();
     if (reject_rate >= 0.10) {
-        char buf[128];
-        std::snprintf(buf, sizeof(buf), "parser_reject_rate %.2f%% exceeds threshold 10.00%%", reject_rate * 100.0);
-        failures.push_back(buf);
+        failures.push_back(std::format("parser_reject_rate {:.2f}% exceeds threshold 10.00%", reject_rate * 100.0));
     }
 
     bool healthy = failures.empty();
@@ -119,8 +126,8 @@ int main(int argc, char* argv[]) {
             std::cout << "\033[32mHEALTHY\033[0m\n";
         } else {
             std::cout << "\033[31mUNHEALTHY\033[0m\n";
-            for (const auto& f : failures) {
-                std::cout << "  FAIL: " << f << "\n";
+            for (const auto& failure : failures) {
+                std::cout << "  FAIL: " << failure << "\n";
             }
         }
         std::cout.flush();

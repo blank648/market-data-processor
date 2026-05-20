@@ -17,20 +17,24 @@ namespace mdp {
 /// @brief A pipeline stage that consumes MarketSnapshot data and writes it to a PostgreSQL database.
 class DbWriter final : public ThreadBase<DbWriter> {
 public:
-    /// @brief Constructs the DbWriter.
-    /// @param input The ring buffer to read snapshots from (4K slots).
-    /// @param conn_string The PostgreSQL connection string.
     DbWriter(RingBuffer<MarketSnapshot, 4096>& input, const std::string& conn_string);
+
+    // Non-copyable and non-movable (Rule of Five compliance)
+    DbWriter(const DbWriter&) = delete;
+    DbWriter& operator=(const DbWriter&) = delete;
+    DbWriter(DbWriter&&) = delete;
+    DbWriter& operator=(DbWriter&&) = delete;
 
     /// @brief Destructor. Ensures the thread is stopped.
     ~DbWriter() override;
 
     /// @brief The main worker loop for the thread.
     /// @param st A stop token for cooperative cancellation.
-    void run(StopToken st);
+    void run(StopToken stop_token);
 
 private:
-    void flush_to_db(pqxx::connection& conn, const std::vector<MarketSnapshot>& batch);
+    void process_queue(pqxx::connection& conn, StopToken stop_token);
+    static void flush_to_db(pqxx::connection& conn, const std::vector<MarketSnapshot>& batch);
 
     RingBuffer<MarketSnapshot, 4096>& input_;
     std::string conn_string_;

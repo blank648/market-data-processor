@@ -14,6 +14,7 @@ target_link_libraries(mdp-processor PRIVATE
     feed
     processing
     book
+    strategy
     infra
     PostgreSQL::PostgreSQL
 )

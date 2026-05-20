@@ -3,6 +3,7 @@
 #include <atomic>
 #include <chrono>
 #include <random>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -11,7 +12,6 @@
 #include "core/ThreadBase.hpp"
 #include "feed/FeedConfig.hpp"
 #include "feed/IFeedSource.hpp"
-#include <string>
 
 namespace mdp {
 
@@ -36,6 +36,7 @@ struct SymbolState {
  */
 class FeedSimulator final : public ThreadBase<FeedSimulator>, public IFeedSource {
     friend class ThreadBase<FeedSimulator>;
+
    public:
     /**
      * @brief Constructs a new FeedSimulator.
@@ -47,6 +48,11 @@ class FeedSimulator final : public ThreadBase<FeedSimulator>, public IFeedSource
     ~FeedSimulator() override {
         stop();
     }
+
+    FeedSimulator(const FeedSimulator&) = delete;
+    FeedSimulator& operator=(const FeedSimulator&) = delete;
+    FeedSimulator(FeedSimulator&&) = delete;
+    FeedSimulator& operator=(FeedSimulator&&) = delete;
 
     // Explicit delegation resolves name collision between
     // ThreadBase (implementation) and IFeedSource (interface).
@@ -99,7 +105,7 @@ class FeedSimulator final : public ThreadBase<FeedSimulator>, public IFeedSource
      * @brief The thread function generating ticks loop.
      * @param st A StopToken provided by ThreadBase to signal stopping.
      */
-    void run(StopToken st);
+    void run(StopToken stop_token);
 
     /**
      * @brief Generates a tick for the given symbol index.
@@ -123,8 +129,8 @@ class FeedSimulator final : public ThreadBase<FeedSimulator>, public IFeedSource
     // Prevents guard > interval at high frequencies (>100kHz).
     // Below 20kHz: 50µs guard gives precise spin-to-deadline.
     // Above 100kHz: guard = interval/10 preserves sleep benefit.
-    void rate_control(std::chrono::steady_clock::time_point& next_tick,
-                      std::chrono::nanoseconds interval) noexcept;
+    static void rate_control(std::chrono::steady_clock::time_point& next_tick,
+                             std::chrono::nanoseconds interval) noexcept;
 
     FeedConfig config_;
     TickRingBuffer16K& output_;

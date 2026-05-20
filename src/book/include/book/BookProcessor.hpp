@@ -25,16 +25,25 @@ using SnapshotRingBuffer4K = RingBuffer<MarketSnapshot, 4096>;
 /// @brief A pipeline stage that consumes normalized ticks and builds order books.
 class BookProcessor final : public ThreadBase<BookProcessor> {
     friend class ThreadBase<BookProcessor>;
+
    public:
     /// @brief Constructs the processor, linking it to an input ring buffer.
     /// @param input The ring buffer containing normalized MarketTick data.
     explicit BookProcessor(TickRingBuffer4K& input);
-    BookProcessor(TickRingBuffer4K& input, SnapshotRingBuffer4K& output);
+    BookProcessor(TickRingBuffer4K& input, SnapshotRingBuffer4K& db_queue);
+    BookProcessor(TickRingBuffer4K& input, SnapshotRingBuffer4K& db_queue,
+                  SnapshotRingBuffer4K& signal_queue);
 
     /// @brief Destructor. Stops the worker thread.
     ~BookProcessor() override {
         stop();
     }
+
+    // Non-copyable, non-movable
+    BookProcessor(const BookProcessor&) = delete;
+    BookProcessor& operator=(const BookProcessor&) = delete;
+    BookProcessor(BookProcessor&&) = delete;
+    BookProcessor& operator=(BookProcessor&&) = delete;
 
     /// @brief Access the order book for a given symbol.
     /// @param symbol The symbol to look up.
@@ -54,11 +63,12 @@ class BookProcessor final : public ThreadBase<BookProcessor> {
    protected:
     /// @brief The main worker loop for the thread.
     /// @param st A stop token for cooperative cancellation.
-    void run(StopToken st);
+    void run(StopToken stop_token);
 
    private:
     TickRingBuffer4K& input_;
-    SnapshotRingBuffer4K* output_{nullptr};
+    SnapshotRingBuffer4K* db_queue_{nullptr};
+    SnapshotRingBuffer4K* signal_queue_{nullptr};
     std::unordered_map<std::string, OrderBook> books_;
     std::atomic<uint64_t> ticks_processed_{0};
 
@@ -76,6 +86,10 @@ class BookProcessor final : public ThreadBase<BookProcessor> {
     /// @param symbol The symbol to update.
     /// @param price The new price to incorporate.
     void update_reference(std::string_view symbol, double price) noexcept;
+
+    /// @brief Processes a single market tick.
+    /// @param tick The tick to process.
+    void process_tick(const MarketTick& tick);
 
     /// @brief Converts a MarketTick to a BookDelta.
     /// @param tick The source tick.
