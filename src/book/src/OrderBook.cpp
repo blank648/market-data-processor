@@ -25,20 +25,23 @@ void OrderBook::apply(const BookDelta& delta) noexcept {
     ++sequence_;
     ++updates_applied_;
 
-    // [CROSSED BOOK GUARD] In production, crossed books indicate feed error.
-    // We reject rather than correct to avoid masking upstream bugs.
+    // [CROSSED BOOK GUARD] Reject genuinely crossed books (bid > best ask, or
+    // ask < best bid) which indicate a feed error. Locked books (bid == ask)
+    // are accepted: Alpha Vantage supplies a single last-trade price, so bid
+    // and ask collapse to the same level — that is valid "last price" data,
+    // not a feed error.
     if (delta.volume > 0) {
-        if (delta.side == OrderSide::BID && !asks_.empty() && delta.price >= asks_.begin()->first) {
+        if (delta.side == OrderSide::BID && !asks_.empty() && delta.price > asks_.begin()->first) {
             const double best_ask = asks_.begin()->first;
             std::cerr << "[BOOK WARN] Crossed book rejected for " << symbol()
-                      << ": bid " << delta.price << " >= best ask " << best_ask << "\n";
+                      << ": bid " << delta.price << " > best ask " << best_ask << "\n";
             return;
         }
 
-        if (delta.side == OrderSide::ASK && !bids_.empty() && delta.price <= bids_.rbegin()->first) {
+        if (delta.side == OrderSide::ASK && !bids_.empty() && delta.price < bids_.rbegin()->first) {
             const double best_bid = bids_.rbegin()->first;
             std::cerr << "[BOOK WARN] Crossed book rejected for " << symbol()
-                      << ": ask " << delta.price << " <= best bid " << best_bid << "\n";
+                      << ": ask " << delta.price << " < best bid " << best_bid << "\n";
             return;
         }
     }

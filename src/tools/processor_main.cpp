@@ -6,7 +6,7 @@
 #include <thread>
 #include <chrono>
 
-#include "feed/FeedSimulator.hpp"
+#include "feed/PostgresFeedReader.hpp"
 #include "processing/TickParser.hpp"
 #include "processing/Normalizer.hpp"
 #include "book/BookProcessor.hpp"
@@ -65,9 +65,17 @@ int main() {
 
     // 3. Read Symbols
     const char* symbols_env = std::getenv("MDP_SYMBOLS");
-    std::string symbols_str = (symbols_env != nullptr) ? symbols_env : "AAPL,MSFT,GOOGL,IBM,TSLA,AMZN";
+    if (symbols_env == nullptr) {
+        log->error("Environment variable MDP_SYMBOLS is missing!");
+        return 1;
+    }
+    std::string symbols_str(symbols_env);
     std::vector<std::string> symbols = split_symbols(symbols_str);
-    
+    if (symbols.empty()) {
+        log->error("MDP_SYMBOLS is set but contains no valid symbols!");
+        return 1;
+    }
+
     log->info("Configured symbols: {}", symbols_str);
 
     // 4. Register Signal Handlers
@@ -84,18 +92,16 @@ int main() {
     SnapshotRingBuffer4K signal_queue;
     SignalRingBuffer4K alert_queue;
 
-    // Feed Config
+    // Feed Config — initial_prices unused by PostgresFeedReader but kept for
+    // FeedConfig::is_valid() which requires symbols.size() == initial_prices.size().
     FeedConfig config = FeedConfig::default_config();
     config.symbols = symbols;
-    config.initial_prices.clear();
-    for (size_t i = 0; i < symbols.size(); ++i) {
-        config.initial_prices.push_back(100.0 + (static_cast<double>(i) * 10.0));
-    }
-    config.tick_rate_hz = 1000;
-    
+    config.initial_prices.assign(symbols.size(), 0.0);
+    config.tick_rate_hz = 1; // unused by PostgresFeedReader; must be non-zero for is_valid()
+
     // Stages
     log->info("Initializing pipeline stages...");
-    FeedSimulator sim(config, sim_to_parser);
+    PostgresFeedReader sim(config, db_conn_str, sim_to_parser);
     TickParser    parser(sim_to_parser, parser_to_norm);
     Normalizer    norm(parser_to_norm, norm_to_book);
     BookProcessor book(norm_to_book, snapshot_to_db, signal_queue);
@@ -124,7 +130,7 @@ int main() {
 
     // 8. Stop Stages in Reverse Order
     sim.stop();
-    log->info("FeedSimulator stopped.");
+    log->info("PostgresFeedReader stopped.");
     
     parser.stop();
     log->info("TickParser stopped.");

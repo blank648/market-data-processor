@@ -1,5 +1,6 @@
 add_library(feed STATIC
     src/FeedSimulator.cpp
+    src/PostgresFeedReader.cpp
 )
 target_sources(feed PUBLIC
     FILE_SET HEADERS
@@ -8,6 +9,7 @@ target_sources(feed PUBLIC
         include/feed/FeedSimulator.hpp
         include/feed/FeedConfig.hpp
         include/feed/IFeedSource.hpp
+        include/feed/PostgresFeedReader.hpp
 )
 target_link_libraries(feed PUBLIC core spdlog::spdlog nlohmann_json::nlohmann_json)
-target_link_libraries(feed PRIVATE infra)
+target_link_libraries(feed PRIVATE infra pqxx)
