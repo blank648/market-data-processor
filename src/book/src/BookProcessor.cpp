@@ -52,6 +52,10 @@ uint64_t BookProcessor::books_active() const noexcept {
     return static_cast<uint64_t>(books_.size());
 }
 
+uint64_t BookProcessor::snapshots_dropped() const noexcept {
+    return snapshots_dropped_.load(std::memory_order_relaxed);
+}
+
 void BookProcessor::run(StopToken stop_token) {
     auto log_ = mdp::Logger::get("BookProcessor");
     log_->info("BookProcessor starting, tracking {} symbols", books_active());
@@ -109,10 +113,15 @@ void BookProcessor::process_tick(const MarketTick& tick) {
         snap.sequence = static_cast<int64_t>(iter->second.updates_applied());
 
         if (db_queue_ != nullptr) {
-            db_queue_->try_push(snap);
+            if (!db_queue_->try_push(snap)) {
+                const auto dropped = snapshots_dropped_.fetch_add(1, std::memory_order_relaxed) + 1;
+                log_->warn("Snapshot dropped for {} — db_queue full (total dropped: {})", symbol, dropped);
+            }
         }
         if (signal_queue_ != nullptr) {
-            signal_queue_->try_push(snap);
+            if (!signal_queue_->try_push(snap)) {
+                log_->warn("Snapshot dropped for {} — signal_queue full", symbol);
+            }
         }
     }
 }

@@ -10,6 +10,7 @@ target_sources(unit_tests PRIVATE
     feed_tests.cpp
     processing_tests.cpp
     strategy_tests.cpp
+    extended_tests.cpp
 )
 
 target_link_libraries(unit_tests PRIVATE
@@ -34,6 +35,8 @@ add_executable(bridge_integration_tests
 )
 
 target_link_libraries(bridge_integration_tests PRIVATE
+    core
+    feed
     infra
     pqxx
     GTest::gtest_main

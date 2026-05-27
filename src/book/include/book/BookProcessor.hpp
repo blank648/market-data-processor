@@ -60,6 +60,10 @@ class BookProcessor final : public ThreadBase<BookProcessor> {
     /// @return The number of active order books.
     [[nodiscard]] uint64_t books_active() const noexcept;
 
+    /// @brief Gets the total number of snapshots dropped because the output ring buffer was full.
+    /// @return The count of dropped snapshots.
+    [[nodiscard]] uint64_t snapshots_dropped() const noexcept;
+
    protected:
     /// @brief The main worker loop for the thread.
     /// @param st A stop token for cooperative cancellation.
@@ -71,6 +75,7 @@ class BookProcessor final : public ThreadBase<BookProcessor> {
     SnapshotRingBuffer4K* signal_queue_{nullptr};
     std::unordered_map<std::string, OrderBook> books_;
     std::atomic<uint64_t> ticks_processed_{0};
+    std::atomic<uint64_t> snapshots_dropped_{0};
 
     // Side determination: price < reference -> BID, price >= reference -> ASK
     // Reference price per symbol = exponential moving average of price

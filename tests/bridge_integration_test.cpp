@@ -10,6 +10,9 @@
 #include "core/RingBuffer.hpp"
 #include "core/MarketSnapshot.hpp"
 #include "strategy/Signal.hpp"
+#include "feed/FeedConfig.hpp"
+#include "feed/PostgresFeedReader.hpp"
+#include "core/MarketTick.hpp"
 
 #include <chrono>
 #include <cstring>
@@ -172,4 +175,168 @@ TEST_F(BridgeIntegrationTest, SignalDbWriterFlushesSignalsToDB) {
 
     EXPECT_DOUBLE_EQ(result[2][0].as<double>(), 151.0);
     EXPECT_EQ(result[2][1].as<std::string>(), "SELL");
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PostgresFeedReaderBridgeTest
+// Requires a live PostgreSQL instance. Inserts test rows with a synthetic ticker
+// "PRFT" (unique, non-colliding) and verifies that PostgresFeedReader picks them
+// up correctly. TearDown removes all inserted rows and the test symbol.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class PostgresFeedReaderBridgeTest : public ::testing::Test {
+protected:
+    static constexpr const char* kTestTicker = "PRFT";
+
+    void SetUp() override {
+        Logger::init("pfr-bridge-test", spdlog::level::warn);
+
+        try {
+            pqxx::connection probe(conn_str());
+
+            pqxx::work txn(probe);
+            // Insert a synthetic Symbol so MarketPrices FK is satisfied.
+            txn.exec_params(
+                R"(INSERT INTO "Symbols" ("Ticker","CompanyName","IsActive","CreatedAt","UpdatedAt")
+                   VALUES ($1,'PostgresFeedReader Test Symbol',false,NOW(),NOW())
+                   ON CONFLICT ("Ticker") DO NOTHING)",
+                kTestTicker);
+            txn.commit();
+        } catch (const std::exception& ex) {
+            GTEST_SKIP() << "PostgreSQL not reachable — skipping PostgresFeedReader bridge tests: "
+                         << ex.what();
+        }
+    }
+
+    void TearDown() override {
+        try {
+            pqxx::connection conn(conn_str());
+            pqxx::work txn(conn);
+            txn.exec_params(
+                R"(DELETE FROM "MarketPrices" WHERE "Symbol" = $1)", kTestTicker);
+            txn.exec_params(
+                R"(DELETE FROM "Symbols" WHERE "Ticker" = $1)", kTestTicker);
+            txn.commit();
+        } catch (...) {}
+        Logger::shutdown();
+    }
+
+    // Helper: insert a MarketPrices row for kTestTicker with Source=1 (AlphaVantage).
+    void insert_price_row(pqxx::connection& conn, double price, double volume,
+                          const std::string& recorded_at_expr = "NOW()") {
+        pqxx::work txn(conn);
+        // Use a subquery so SymbolId is resolved correctly even when the caller
+        // doesn't know the numeric Id.
+        txn.exec_params(
+            R"(INSERT INTO "MarketPrices"
+                   ("Symbol","Price","Volume","RecordedAt","Source","SymbolId","CreatedAt","UpdatedAt")
+               SELECT $1::varchar, $2::numeric, $3::bigint, )" + recorded_at_expr + R"(, 1, s."Id", NOW(), NOW()
+               FROM "Symbols" s WHERE s."Ticker" = $1::varchar)",
+            kTestTicker, price, static_cast<long long>(volume));
+        txn.commit();
+    }
+};
+
+// Verifies basic read path: rows inserted before start are published on first poll.
+TEST_F(PostgresFeedReaderBridgeTest, PublishesAlphaVantageRowsOnFirstPoll) {
+    {
+        pqxx::connection conn(conn_str());
+        insert_price_row(conn, 123.45, 5000.0, "NOW() - INTERVAL '10 seconds'");
+        insert_price_row(conn, 234.56, 6000.0, "NOW() - INTERVAL '5 seconds'");
+    }
+
+    TickRingBuffer16K output;
+    FeedConfig cfg;
+    cfg.symbols = {kTestTicker};
+
+    PostgresFeedReader reader(cfg, conn_str(), output);
+    reader.start();
+
+    // First poll fires immediately; wait up to 3s.
+    MarketTick tick{};
+    std::vector<MarketTick> received;
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(3);
+    while (std::chrono::steady_clock::now() < deadline) {
+        if (output.try_pop(tick)) received.push_back(tick);
+        if (received.size() >= 2) break;
+        std::this_thread::yield();
+    }
+    reader.stop();
+    while (output.try_pop(tick)) received.push_back(tick);
+
+    ASSERT_GE(received.size(), 2U)
+        << "PostgresFeedReader must publish both pre-inserted rows within 3s";
+
+    for (const auto& t : received) {
+        EXPECT_GT(t.price, 0.0);
+        EXPECT_GT(t.volume, 0.0);
+        EXPECT_EQ(t.side, 2U) << "PostgresFeedReader must set side=2 (trade)";
+        EXPECT_GT(t.timestamp_ns, 0LL);
+        const std::string_view sym(t.symbol.data(),
+                                    ::strnlen(t.symbol.data(), t.symbol.size()));
+        EXPECT_EQ(sym, kTestTicker);
+    }
+
+    // Both specific prices must appear.
+    auto has_price = [&](double target) {
+        return std::any_of(received.begin(), received.end(),
+                           [target](const MarketTick& m) {
+                               return std::abs(m.price - target) < 0.01;
+                           });
+    };
+    EXPECT_TRUE(has_price(123.45)) << "First test row (price=123.45) must be published";
+    EXPECT_TRUE(has_price(234.56)) << "Second test row (price=234.56) must be published";
+
+    EXPECT_GE(reader.ticks_published(), 2U);
+}
+
+// Verifies the watermark: rows already published are NOT re-published on subsequent polls.
+TEST_F(PostgresFeedReaderBridgeTest, WatermarkPreventsRepublishingAlreadySeenRows) {
+    {
+        pqxx::connection conn(conn_str());
+        // Two rows in the past — will be read on the first poll.
+        insert_price_row(conn, 10.0, 100.0, "NOW() - INTERVAL '20 seconds'");
+        insert_price_row(conn, 20.0, 100.0, "NOW() - INTERVAL '15 seconds'");
+    }
+
+    TickRingBuffer16K output;
+    FeedConfig cfg;
+    cfg.symbols = {kTestTicker};
+
+    PostgresFeedReader reader(cfg, conn_str(), output);
+    reader.start();
+
+    // Wait for first poll to publish the 2 initial rows (first poll is immediate).
+    const auto first_poll_deadline = std::chrono::steady_clock::now() + std::chrono::seconds(3);
+    size_t first_count = 0;
+    MarketTick tick{};
+    while (std::chrono::steady_clock::now() < first_poll_deadline) {
+        if (output.try_pop(tick)) ++first_count;
+        if (first_count >= 2) break;
+        std::this_thread::yield();
+    }
+    ASSERT_GE(first_count, 2U) << "First poll must deliver the 2 pre-inserted rows";
+
+    // Insert a new row AFTER the first poll has seen the initial rows.
+    {
+        pqxx::connection conn(conn_str());
+        insert_price_row(conn, 30.0, 100.0);  // RecordedAt = NOW()
+    }
+
+    // Wait for the second poll (reader polls every 2s).
+    std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+
+    // Drain everything that arrived after the first poll.
+    std::vector<double> post_first_poll_prices;
+    while (output.try_pop(tick)) post_first_poll_prices.push_back(tick.price);
+
+    reader.stop();
+
+    // Only the new row (price=30.0) should appear — NOT the original 2 rows again.
+    EXPECT_EQ(post_first_poll_prices.size(), 1U)
+        << "Watermark must prevent re-publishing the 2 rows already seen on first poll";
+    if (!post_first_poll_prices.empty()) {
+        EXPECT_NEAR(post_first_poll_prices[0], 30.0, 0.01)
+            << "Second poll must deliver exactly the newly inserted row";
+    }
 }

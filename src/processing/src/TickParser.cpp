@@ -46,8 +46,8 @@ bool TickParser::process_tick(StopToken& stop_token) noexcept {
         return false;
     }
     
+    enrich(tick);  // normalize before validation so side-clamping is reachable
     if (validate(tick)) {
-        enrich(tick);
         auto log_ = mdp::Logger::get("TickParser");
         if (log_ != nullptr) {
             log_->trace("Parsed tick: {}", tick.to_string());
@@ -76,8 +76,8 @@ void TickParser::drain_input() noexcept {
     auto log_ = mdp::Logger::get("TickParser");
     
     while (input_.try_pop(tick)) {
+        enrich(tick);  // normalize before validation
         if (validate(tick)) {
-            enrich(tick);
             if (log_ != nullptr) {
                 log_->trace("Parsed tick: {}", tick.to_string());
             }

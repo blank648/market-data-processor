@@ -72,7 +72,7 @@ struct MarketTick {
         tick.volume = volume;
         tick.side = side;
         tick.timestamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                             std::chrono::steady_clock::now().time_since_epoch())
+                             std::chrono::system_clock::now().time_since_epoch())
                              .count();
         return tick;
     }
