@@ -32,7 +32,7 @@ Arhitectura aleasă este un **multi-stage pipeline** unde fiecare stage rulează
 | Standard | **C++20** | `std::jthread`, `std::stop_token`, Concepts |
 | Build | **CMake 3.28 + Ninja** | FetchContent pentru deps, Ninja rapid |
 | Testing | **Google Test** | Industry standard, integrare CLion nativă |
-| Benchmarks | **Google Benchmark** | Latency microsecond-level [^1] |
+| Benchmarks | **Google Benchmark** | Latency microsecond-level |
 | Logging | **spdlog** (async sink) | Header-only, async, zero-alloc hot path |
 | Data format | **nlohmann/json** | Feed simulation în JSON → binary intern |
 | Deps | **CPM.cmake / FetchContent** | No submodules, clean repo |
@@ -79,7 +79,7 @@ Arhitectura aleasă este un **multi-stage pipeline** unde fiecare stage rulează
 
 ## C++20 Features Showcase (important pentru CV)
 
-Acestea sunt exact conceptele pe care recrutorii le caută și trebuie să fie vizibile în cod:[^2][^1]
+Acestea sunt exact conceptele vizibile în cod:
 
 - **`std::jthread` + `std::stop_token`** — lifecycle management curat fără `volatile bool running`
 - **`std::atomic<T>` cu memory ordering explicit** — `memory_order_acquire` / `memory_order_release` în SPSC queue (nu doar `seq_cst` naive)
@@ -156,40 +156,26 @@ Acestea sunt exact conceptele pe care recrutorii le caută și trebuie să fie v
 - README.md profesional cu arhitectură diagram + benchmark results
 - Doxygen comments pe interfețele publice
 - Profiling cu Instruments (macOS) sau `perf`
-- `BENCHMARKS.md` cu rezultate reale (numbers matter pe CV!)
+- `BENCHMARKS.md` cu rezultate reale
 
 ***
 
 ## Decizii Tehnice Cheie
 
-**1. SPSC vs MPMC?** — Folosești SPSC între fiecare pereche de stage-uri adiacente. Dacă vrei să extinzi cu multi-source feeds, adaugi un MPSC queue doar la intrarea în Parser.[^4]
+**1. SPSC vs MPMC?** — Folosești SPSC între fiecare pereche de stage-uri adiacente. Dacă vrei să extinzi cu multi-source feeds, adaugi un MPSC queue doar la intrarea în Parser.
 
-**2. Bounded buffer size?** — Da, **întotdeauna bounded** (power-of-2, ex: 4096 slots). Unbounded queues pot epuiza memoria dacă consumatorul rămâne în urmă.[^1]
+**2. Bounded buffer size?** — Da, **întotdeauna bounded** (power-of-2, ex: 4096 slots). Unbounded queues pot epuiza memoria dacă consumatorul rămâne în urmă.
 
 **3. double vs int64 pentru prețuri?** — În producție se folosesc `int64` (price în bps/ticks). Pe CV este OK `double`, dar menționează în README că ești conștient de alternativă — arată maturitate.
 
-**4. Simulare vs API real?** — Simulare pentru MVP, dar adaugă un `IFeedSource` interface abstract. Astfel poți conecta ulterior Alpaca/Binance WebSocket API ca extensie opțională — demonstrează gândire extensibilă.[^3]
+**4. Simulare vs API real?** — Simulare pentru MVP, dar adaugă un `IFeedSource` interface abstract. Astfel poți conecta ulterior Alpaca/Binance WebSocket API ca extensie opțională — demonstrează gândire extensibilă.
 
 ***
 
 ## Metrici Țintă pentru README
 
-Acestea sunt cifrele care impresionează pe CV — trebuie să le măsori și să le publici:
-
 - RingBuffer throughput: **> 10M ops/sec** (single-threaded benchmark)
 - End-to-end latency Feed→Signal: **< 1 µs** median pe Apple Silicon
 - OrderBook update latency: **< 500 ns** per tick
-
-***
-
-## Workflow cu Tool-urile Tale
-
-| Fază | Tool | Cum îl folosești |
-| :-- | :-- | :-- |
-| Design / decizie | **Perplexity** | "Ce memory ordering folosesc pentru SPSC publish?" |
-| Schelet modul nou | **Antigravity** | "Generează scheletul clasei RingBuffer<T,N>" |
-| Cod zilnic | **Copilot Pro** | Completare inline în CLion, flow state |
-| Review / refactor | **Gemini Code Assist** | "Explică de ce am false sharing aici", "Refactorizează ThreadBase" |
-| Build / test / git | **Gemini CLI** | `cmake --build`, `ctest`, `git commit -m "feat: add SPSC ring buffer"` |
 
 
