@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: mdp_user
+      POSTGRES_PASSWORD: mdp_password
+      POSTGRES_DB: mdp_db
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mdp_user -d mdp_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  processor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DB_HOST=postgres
+      - DB_USER=mdp_user
+      - DB_PASSWORD=mdp_password
+      - DB_NAME=mdp_db
+    # Run the health check continuously as a mock service for the demo
+    command: ["mdp-health", "--json"]

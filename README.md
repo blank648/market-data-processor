@@ -6,6 +6,19 @@ High-performance C++20 lock-free market data processor with SPSC ring buffers, r
 ![CMake](https://img.shields.io/badge/CMake-3.25%2B-green)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 ![Platform](https://img.shields.io/badge/platform-macOS%20arm64-lightgrey)
+![CI](https://github.com/blank648/market-data-processor/actions/workflows/ci.yml/badge.svg)
+![Coverage](https://img.shields.io/badge/coverage-96.2%25-brightgreen)
+
+## ⚡ Performance Highlights
+| Metric | Value |
+|---|---|
+| Ring Buffer Throughput | **351.6M items/sec** (sequential) |
+| Cross-Core SPSC | **25.7M items/sec** |
+| Tick Parser Latency | **~200 ns/tick** |
+| Pipeline Throughput | **150,000+ msg/sec** |
+| End-to-End Latency | **~5.5 μs (p50)** |
+| Test Coverage | **96.2% lines, 92.3% functions** |
+| Sanitizer Status | ✅ ASan, UBSan, TSan — Zero violations |
 
 ---
 
@@ -13,32 +26,24 @@ High-performance C++20 lock-free market data processor with SPSC ring buffers, r
 
 MDP is a four-stage, fully pipelined market data processing system. Each stage runs on a dedicated `std::jthread` and communicates with the next exclusively through a lock-free SPSC ring buffer. There are no mutexes, no condition variables, and no shared state between stages.
 
+```mermaid
+graph TD
+    A[FeedSimulator<br/>jthread<br/>GBM+MRS] -- "RB16K" --> B[TickParser<br/>jthread<br/>validate]
+    B -- "RB4K" --> C[Normalizer<br/>jthread<br/>dedup]
+    C -- "RB4K" --> D[BookProcessor<br/>jthread<br/>OrderBook×N]
+    D -- "Updates" --> E[(PostgreSQL)]
+    
+    subgraph "MDP Pipeline - Zero mutexes on hot path"
+        A
+        B
+        C
+        D
+    end
 ```
-┌─────────────────────────────────────────────────────────┐
-│                   MDP Pipeline                          │
-│                                                         │
-│  FeedSimulator ──[RB16K]──► TickParser                  │
-│       │                          │                      │
-│   jthread                    jthread                    │
-│   GBM+MRS                   validate                    │
-│   price                     sequence                    │
-│   model                          │                      │
-│                           [RB4K]─┘                      │
-│                                │                        │
-│                           Normalizer                    │
-│                            jthread                      │
-│                            dedup                        │
-│                                │                        │
-│                           [RB4K]─┘                      │
-│                                │                        │
-│                         BookProcessor                   │
-│                            jthread                      │
-│                          OrderBook×N                    │
-└─────────────────────────────────────────────────────────┘
 
-RB16K = RingBuffer<MarketTick, 16384>   (~640 KiB tick storage)
-RB4K  = RingBuffer<MarketTick,  4096>   (~160 KiB tick storage)
-```
+*RB16K = RingBuffer<MarketTick, 16384> (~640 KiB tick storage)*  
+*RB4K = RingBuffer<MarketTick, 4096> (~160 KiB tick storage)*
+
 
 **Stage responsibilities:**
 
@@ -50,6 +55,16 @@ RB4K  = RingBuffer<MarketTick,  4096>   (~160 KiB tick storage)
 | `BookProcessor` | Consumer | Maintains one `OrderBook` per symbol |
 
 ---
+
+## 🧠 Design Philosophy
+
+For a deeper dive into the technical rationale, see [docs/DESIGN.md](docs/DESIGN.md).
+
+- **Lock-free SPSC over `std::queue`+mutex**: Avoids core serialization and cache thrashing on the hot path.
+- **`alignas(64)` for false sharing prevention**: Isolates indices to prevent cache invalidation stalls.
+- **`acquire`/`release` vs `seq_cst`**: Uses minimal synchronization primitives to avoid full memory barriers.
+- **CRTP `ThreadBase` with `std::jthread`**: Guarantees deterministic lifecycle management and eliminates dangling threads.
+- **GBM+OU price model**: Ensures `ask > bid` mathematically, eliminating crossed-book edge cases.
 
 ## Key Design Decisions
 
@@ -139,6 +154,14 @@ market-data-processor/
 
 ## Build Instructions
 
+## 🐳 Quick Start with Docker
+
+To run the pipeline and a PostgreSQL 16 instance instantly without installing C++ toolchains:
+
+```bash
+docker compose up --build
+```
+
 ### Prerequisites
 
 - macOS arm64 (Apple Silicon) or Linux x86-64
@@ -213,6 +236,8 @@ Total Test time (real) =   2.12 sec
 ```
 
 ### Performance Baseline — Apple M-series (arm64, Release)
+
+![Benchmark Chart](benchmarks/benchmark_chart.png)
 
 | Benchmark | Result | Notes |
 |---|---|---|
